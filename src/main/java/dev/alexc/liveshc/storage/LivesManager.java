@@ -12,10 +12,12 @@ import java.util.UUID;
 
 public final class LivesManager {
     private static final String PLAYERS_SECTION = "players";
+    private static final String SHARED_LIVES_PATH = "shared-lives";
 
     private final Main plugin;
     private final File playersFile;
     private final Map<UUID, Integer> lives = new HashMap<>();
+    private Integer sharedLives;
     private YamlConfiguration playersConfig;
 
     public LivesManager(Main plugin) {
@@ -26,6 +28,9 @@ public final class LivesManager {
     public void load() {
         playersConfig = YamlConfiguration.loadConfiguration(playersFile);
         lives.clear();
+        sharedLives = playersConfig.contains(SHARED_LIVES_PATH)
+                ? Math.max(0, playersConfig.getInt(SHARED_LIVES_PATH, 0))
+                : null;
 
         ConfigurationSection players = playersConfig.getConfigurationSection(PLAYERS_SECTION);
         if (players == null) {
@@ -44,6 +49,19 @@ public final class LivesManager {
     }
 
     public int ensurePlayer(UUID playerId) {
+        if (plugin.isSharedLivesEnabled()) {
+            return ensureSharedLives();
+        }
+        return ensureIndividualPlayer(playerId);
+    }
+
+    public void ensureCurrentModeInitialized() {
+        if (plugin.isSharedLivesEnabled()) {
+            ensureSharedLives();
+        }
+    }
+
+    private int ensureIndividualPlayer(UUID playerId) {
         Integer current = lives.get(playerId);
         if (current != null) {
             return current;
@@ -55,7 +73,28 @@ public final class LivesManager {
         return initial;
     }
 
+    private int ensureSharedLives() {
+        if (sharedLives != null) {
+            return sharedLives;
+        }
+
+        sharedLives = initialValue();
+        save();
+        return sharedLives;
+    }
+
+    private int initialValue() {
+        return Math.min(plugin.getInitialLives(), plugin.getMaximumLives());
+    }
+
     public int getLives(UUID playerId) {
+        return getLives(playerId, plugin.isSharedLivesEnabled());
+    }
+
+    public int getLives(UUID playerId, boolean shared) {
+        if (shared) {
+            return Math.min(Math.max(ensureSharedLives(), 0), plugin.getMaximumLives());
+        }
         Integer current = lives.get(playerId);
         if (current == null) {
             return Math.min(plugin.getInitialLives(), plugin.getMaximumLives());
@@ -64,26 +103,40 @@ public final class LivesManager {
     }
 
     public LifeChange removeLife(UUID playerId) {
-        int previous = ensurePlayer(playerId);
+        boolean shared = plugin.isSharedLivesEnabled();
+        int previous = shared ? ensureSharedLives() : ensureIndividualPlayer(playerId);
         int current = Math.max(0, previous - 1);
-        lives.put(playerId, current);
+        setLives(playerId, current, shared);
         save();
-        return new LifeChange(previous, current);
+        return new LifeChange(previous, current, shared);
     }
 
     public AddResult addLives(UUID playerId, int amount) {
-        int previous = ensurePlayer(playerId);
+        boolean shared = plugin.isSharedLivesEnabled();
+        int previous = shared ? ensureSharedLives() : ensureIndividualPlayer(playerId);
         int current = (int) Math.min(plugin.getMaximumLives(), (long) previous + amount);
-        lives.put(playerId, current);
+        setLives(playerId, current, shared);
         save();
-        return new AddResult(previous, current);
+        return new AddResult(previous, current, shared);
     }
 
     public int resetLives(UUID playerId) {
-        int resetValue = Math.min(plugin.getInitialLives(), plugin.getMaximumLives());
-        lives.put(playerId, resetValue);
+        return resetLives(playerId, plugin.isSharedLivesEnabled());
+    }
+
+    public int resetLives(UUID playerId, boolean shared) {
+        int resetValue = initialValue();
+        setLives(playerId, resetValue, shared);
         save();
         return resetValue;
+    }
+
+    private void setLives(UUID playerId, int value, boolean shared) {
+        if (shared) {
+            sharedLives = value;
+        } else {
+            lives.put(playerId, value);
+        }
     }
 
     public void clampToMaximum(int maximum) {
@@ -92,6 +145,13 @@ public final class LivesManager {
             int clamped = Math.min(Math.max(entry.getValue(), 0), maximum);
             if (entry.getValue() != clamped) {
                 entry.setValue(clamped);
+                changed = true;
+            }
+        }
+        if (sharedLives != null) {
+            int clampedShared = Math.min(Math.max(sharedLives, 0), maximum);
+            if (sharedLives != clampedShared) {
+                sharedLives = clampedShared;
                 changed = true;
             }
         }
@@ -109,6 +169,7 @@ public final class LivesManager {
         for (Map.Entry<UUID, Integer> entry : lives.entrySet()) {
             playersConfig.set(PLAYERS_SECTION + "." + entry.getKey(), entry.getValue());
         }
+        playersConfig.set(SHARED_LIVES_PATH, sharedLives);
 
         try {
             playersConfig.save(playersFile);
@@ -117,13 +178,13 @@ public final class LivesManager {
         }
     }
 
-    public record LifeChange(int previous, int current) {
+    public record LifeChange(int previous, int current, boolean shared) {
         public boolean reachedZero() {
             return previous > 0 && current == 0;
         }
     }
 
-    public record AddResult(int previous, int current) {
+    public record AddResult(int previous, int current, boolean shared) {
         public int added() {
             return current - previous;
         }

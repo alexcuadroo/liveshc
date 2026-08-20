@@ -29,11 +29,11 @@ public final class PlayerLivesListener implements Listener {
         Player player = event.getEntity();
         LifeChange change = plugin.getLivesManager().removeLife(player.getUniqueId());
         if (change.reachedZero()) {
-            scheduleNoLivesCommand(player.getUniqueId(), player.getName());
+            scheduleNoLivesCommand(player.getUniqueId(), player.getName(), change.shared());
         }
     }
 
-    private void scheduleNoLivesCommand(UUID playerId, String playerName) {
+    private void scheduleNoLivesCommand(UUID playerId, String playerName, boolean shared) {
         String command = plugin.getNoLivesCommand().trim();
         if (command.startsWith("/")) {
             command = command.substring(1).trim();
@@ -47,21 +47,21 @@ public final class PlayerLivesListener implements Listener {
         String parsedCommand = command.replace("%player%", playerName);
         long delayTicks = plugin.getNoLivesCommandDelaySeconds() * 20L;
         if (delayTicks == 0L) {
-            executeNoLivesCommand(playerId, parsedCommand);
+            executeNoLivesCommand(playerId, parsedCommand, shared);
             return;
         }
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (plugin.getLives(playerId) == 0) {
-                executeNoLivesCommand(playerId, parsedCommand);
+            if (plugin.getLivesManager().getLives(playerId, shared) == 0) {
+                executeNoLivesCommand(playerId, parsedCommand, shared);
             }
         }, delayTicks);
     }
 
-    private void executeNoLivesCommand(UUID playerId, String parsedCommand) {
+    private void executeNoLivesCommand(UUID playerId, String parsedCommand, boolean shared) {
         boolean dispatched = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
         if (dispatched) {
-            plugin.getLivesManager().resetLives(playerId);
+            plugin.getLivesManager().resetLives(playerId, shared);
         } else {
             plugin.getLogger().warning("El comando sin vidas no fue reconocido: " + parsedCommand);
         }

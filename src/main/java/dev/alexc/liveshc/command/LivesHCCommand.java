@@ -79,8 +79,13 @@ public final class LivesHCCommand implements CommandExecutor, TabCompleter {
         }
 
         AddResult result = plugin.getLivesManager().addLives(target.getUniqueId(), amount);
-        sender.sendMessage("Se añadieron " + result.added() + " vidas a " + target.getName()
-                + ". Ahora tiene " + result.current() + "/" + plugin.getMaximumLives() + ".");
+        if (result.shared()) {
+            sender.sendMessage("Se añadieron " + result.added() + " vidas al contador compartido"
+                    + ". Ahora tiene " + result.current() + "/" + plugin.getMaximumLives() + ".");
+        } else {
+            sender.sendMessage("Se añadieron " + result.added() + " vidas a " + target.getName()
+                    + ". Ahora tiene " + result.current() + "/" + plugin.getMaximumLives() + ".");
+        }
         return true;
     }
 

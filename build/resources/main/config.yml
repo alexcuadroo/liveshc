@@ -4,6 +4,10 @@ vidas-iniciales: 3
 # Límite máximo de vidas que puede tener cualquier jugador.
 vidas-maximas: 5
 
+# Si es true, todos los jugadores usan un único contador de vidas.
+# Si es false, cada UUID conserva su propio contador.
+vidas-compartidas: false
+
 # Se ejecuta desde la consola cuando un jugador pasa de una vida a cero.
 # %player% se sustituye por el nombre del jugador. No es necesario escribir "/".
 comando-sin-vidas: "gamemode spectator %player%"

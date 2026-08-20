@@ -18,6 +18,7 @@ public final class Main extends JavaPlugin {
     private int initialLives;
     private int maximumLives;
     private int noLivesCommandDelaySeconds;
+    private boolean sharedLivesEnabled;
     private String noLivesCommand;
     private LivesManager livesManager;
 
@@ -29,6 +30,7 @@ public final class Main extends JavaPlugin {
         livesManager = new LivesManager(this);
         livesManager.load();
         livesManager.clampToMaximum(maximumLives);
+        livesManager.ensureCurrentModeInitialized();
 
         getServer().getPluginManager().registerEvents(new PlayerLivesListener(this), this);
         registerCommand();
@@ -90,6 +92,7 @@ public final class Main extends JavaPlugin {
         maximumLives = configuredMaximum;
         initialLives = configuredInitial;
         noLivesCommandDelaySeconds = configuredDelay;
+        sharedLivesEnabled = getConfig().getBoolean("vidas-compartidas", false);
         noLivesCommand = getConfig().getString("comando-sin-vidas", "");
         if (noLivesCommand == null) {
             noLivesCommand = "";
@@ -106,6 +109,7 @@ public final class Main extends JavaPlugin {
             reloadConfig();
             loadSettings();
             livesManager.clampToMaximum(maximumLives);
+            livesManager.ensureCurrentModeInitialized();
             return true;
         } catch (IOException | InvalidConfigurationException | RuntimeException exception) {
             getLogger().severe("No se pudo recargar config.yml: " + exception.getMessage());
@@ -123,6 +127,10 @@ public final class Main extends JavaPlugin {
 
     public int getMaximumLives() {
         return maximumLives;
+    }
+
+    public boolean isSharedLivesEnabled() {
+        return sharedLivesEnabled;
     }
 
     public String getNoLivesCommand() {
