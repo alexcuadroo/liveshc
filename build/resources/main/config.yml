@@ -1,0 +1,13 @@
+# Vidas que recibe un jugador la primera vez que entra al servidor.
+vidas-iniciales: 3
+
+# Límite máximo de vidas que puede tener cualquier jugador.
+vidas-maximas: 5
+
+# Se ejecuta desde la consola cuando un jugador pasa de una vida a cero.
+# %player% se sustituye por el nombre del jugador. No es necesario escribir "/".
+comando-sin-vidas: "gamemode spectator %player%"
+
+# Segundos de espera entre la muerte y la ejecución del comando.
+# Usa 0 para ejecutarlo inmediatamente.
+delay-comando-segundos: 0
