@@ -42,7 +42,7 @@ function renderPlayer(player, index) {
         <dl class="meta">
           <div><dt>Tiempo jugado</dt><dd>${formatDuration(player.playTimeSeconds)}</dd></div>
           <div><dt>Dimensión</dt><dd>${escapeHtml(location.dimension)}</dd></div>
-          <div><dt>Coordenadas XYZ</dt><dd>${location.coordinates}</dd></div>
+          <div class="coordinates"><dt>Coordenadas XYZ</dt><dd>${location.coordinates}</dd></div>
           <div><dt>Última señal</dt><dd>${player.updatedAt ? new Date(player.updatedAt).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '—'}</dd></div>
         </dl>
       </div>
