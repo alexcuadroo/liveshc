@@ -14,6 +14,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none!important; }
 html { background: var(--coal); }
 body {
   margin: 0;
@@ -64,6 +65,26 @@ main { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(2.5
 h1 { margin: .65rem auto clamp(2rem, 5vw, 4rem); text-align: center; text-transform: uppercase; font: 800 clamp(2.7rem, 8vw, 6.8rem)/.82 "Barlow Condensed", sans-serif; letter-spacing: -.035em; }
 h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: italic; }
 
+.shared-lives {
+  width: min(38rem, 100%);
+  margin: calc(clamp(2rem, 5vw, 4rem) * -.45) auto clamp(2rem, 4vw, 3rem);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .35rem 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--blood-dark);
+  border-left: .3rem solid var(--blood);
+  background: linear-gradient(90deg, rgba(216,58,46,.12), transparent), var(--panel);
+  box-shadow: 0 1rem 3rem rgba(0,0,0,.22);
+}
+.shared-kicker { color: var(--blood); font-size: .62rem; text-transform: uppercase; letter-spacing: .14em; }
+.shared-lives h2 { margin: .1rem 0 0; font: 800 clamp(1.5rem, 4vw, 2.2rem)/1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+.shared-count { grid-row: span 2; color: var(--ink); font: 800 clamp(2.8rem, 7vw, 4.6rem)/.8 "Barlow Condensed", sans-serif; }
+.shared-hearts { grid-column: 1 / -1; min-height: 1rem; color: var(--blood); letter-spacing: .22rem; text-shadow: 0 .12rem 0 var(--blood-dark); }
+.arena.shared-mode { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
+.arena.shared-mode .individual-lives { display: none; }
+
 .arena { display: grid; grid-template-columns: minmax(0, 1fr) clamp(4rem, 9vw, 7rem) minmax(0, 1fr); align-items: stretch; }
 .fighter { position: relative; min-height: 470px; border: 1px solid var(--line); background: linear-gradient(145deg, rgba(255,255,255,.035), transparent 45%), var(--panel); overflow: hidden; container-type: inline-size; }
 .fighter::before { content: attr(data-number); position: absolute; top: -.18em; color: rgba(244,234,219,.035); font: 800 13rem/1 "Barlow Condensed", sans-serif; }
@@ -102,10 +123,12 @@ footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; 
 @media (max-width: 760px) {
   main { padding-top: 2.5rem; }
   .arena { grid-template-columns: 1fr; gap: 0; }
+  .arena.shared-mode { grid-template-columns: 1fr; gap: 1rem; }
   .fighter { min-height: 390px; }
   .fighter-inner { grid-template-columns: minmax(7rem, .7fr) 1.3fr; }
   .versus { width: 4.5rem; margin: -1.25rem auto; aspect-ratio: 1; }
   .fighter-two .fighter-inner { direction: ltr; }
+  .shared-lives { margin-top: -1rem; }
   footer { align-items: flex-start; flex-direction: column; }
 }
 

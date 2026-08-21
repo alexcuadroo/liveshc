@@ -35,8 +35,10 @@ function renderPlayer(player, index) {
       <div class="stats">
         <div class="status ${player.online ? 'is-online' : ''}">${player.online ? 'En línea' : 'Desconectado'}</div>
         <h3 class="player-name">${escapeHtml(name)}</h3>
-        <div class="lives-label">Vidas restantes</div>
-        <div class="hearts ${!lives ? 'empty' : ''}" aria-label="${lives ?? 'Vidas desconocidas'}">${hearts}</div>
+        <div class="individual-lives">
+          <div class="lives-label">Vidas restantes</div>
+          <div class="hearts ${!lives ? 'empty' : ''}" aria-label="${lives ?? 'Vidas desconocidas'}">${hearts}</div>
+        </div>
         <dl class="meta">
           <div><dt>Tiempo jugado</dt><dd>${formatDuration(player.playTimeSeconds)}</dd></div>
           <div><dt>Dimensión</dt><dd>${escapeHtml(location.dimension)}</dd></div>
@@ -46,6 +48,24 @@ function renderPlayer(player, index) {
       </div>
     </div>`;
   article.querySelector('img').addEventListener('error', event => { event.currentTarget.src = fallbackSkin; }, { once: true });
+}
+
+function renderLivesMode(server) {
+  const shared = server?.livesMode === 'shared';
+  const panel = document.querySelector('#shared-lives');
+  const arena = document.querySelector('.arena');
+  const versus = document.querySelector('.versus');
+  panel.hidden = !shared;
+  versus.hidden = shared;
+  arena.classList.toggle('shared-mode', shared);
+  if (!shared) return;
+
+  const lives = server.sharedLives;
+  document.querySelector('#shared-count').value = lives ?? '—';
+  document.querySelector('#shared-count').textContent = lives ?? '—';
+  document.querySelector('#shared-hearts').textContent = lives === null
+    ? 'Sin datos'
+    : lives === 0 ? 'Sin vidas restantes' : '♥'.repeat(Math.min(lives, 20)) + (lives > 20 ? ` +${lives - 20}` : '');
 }
 
 function setConnection(kind, text) {
@@ -59,6 +79,7 @@ async function refresh() {
     const response = await fetch('/api/v1/versus', { headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
+    renderLivesMode(data.server);
     data.players.forEach(renderPlayer);
     state.hasData = true;
     setConnection('online', 'Datos actualizados');

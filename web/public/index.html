@@ -1,42 +1,78 @@
 <!doctype html>
 <html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#120d0c">
-  <meta name="description" content="Estado en vivo de los jugadores de LivesHC">
-  <title>Duelo de supervivencia | LivesHC</title>
-  <link rel="stylesheet" href="/styles.css">
-  <script src="/app.js" defer></script>
-</head>
-<body>
-  <a class="skip-link" href="#duelo">Saltar al duelo</a>
-  <header class="masthead">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">♥</span> LivesHC</div>
-    <div class="sync-state" id="sync-state"><span class="pulse" aria-hidden="true"></span> Conectando</div>
-  </header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#120d0c" />
+    <meta
+      name="description"
+      content="Estado en vivo de los jugadores de LivesHC"
+    />
+    <title>Duelo de supervivencia | LivesHC</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#duelo">Saltar al duelo</a>
+    <header class="masthead">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">♥</span> LivesHC
+      </div>
+      <div class="sync-state" id="sync-state">
+        <span class="pulse" aria-hidden="true"></span> Conectando
+      </div>
+    </header>
 
-  <main id="duelo" tabindex="-1">
-    <div class="eyebrow">Servidor hardcore · Estado público</div>
-    <h1>Dos jugadores.<br><em>Una sola oportunidad.</em></h1>
+    <main id="duelo" tabindex="-1">
+      <div class="eyebrow">Servidor hardcore · Estado público</div>
+      <h1>Dos jugadores.<br /><em>Una sola oportunidad.</em></h1>
 
-    <section class="arena" aria-labelledby="arena-title">
-      <h2 id="arena-title" class="visually-hidden">Jugadores enfrentados</h2>
-      <article class="fighter fighter-one" id="player-0" aria-busy="true"></article>
-      <div class="versus" aria-hidden="true"><span>V</span><span>S</span></div>
-      <article class="fighter fighter-two" id="player-1" aria-busy="true"></article>
-    </section>
+      <section
+        class="shared-lives"
+        id="shared-lives"
+        aria-labelledby="shared-lives-title"
+        hidden
+      >
+        <div>
+          <span class="shared-kicker">Modo cooperativo</span>
+          <h2 id="shared-lives-title">Vidas compartidas</h2>
+        </div>
+        <output
+          class="shared-count"
+          id="shared-count"
+          aria-label="Vidas compartidas restantes"
+          >—</output
+        >
+        <div class="shared-hearts" id="shared-hearts" aria-hidden="true"></div>
+      </section>
 
-    <p class="privacy-note">
-      <span aria-hidden="true">⌖</span>
-      Las coordenadas mostradas son públicas y corresponden a la última posición registrada.
-    </p>
-  </main>
+      <section class="arena" aria-labelledby="arena-title">
+        <h2 id="arena-title" class="visually-hidden">Jugadores enfrentados</h2>
+        <article
+          class="fighter fighter-one"
+          id="player-0"
+          aria-busy="true"
+        ></article>
+        <div class="versus" aria-hidden="true">
+          <span>V</span><span>S</span>
+        </div>
+        <article
+          class="fighter fighter-two"
+          id="player-1"
+          aria-busy="true"
+        ></article>
+      </section>
+    </main>
 
-  <footer>
-    <span>Actualización automática cada 30 segundos</span>
-    <time id="last-update">Sin datos todavía</time>
-  </footer>
-  <div class="visually-hidden" id="announcer" aria-live="polite" aria-atomic="true"></div>
-</body>
+    <footer>
+      <span>Actualización automática cada 30 segundos</span>
+      <time id="last-update">Sin datos todavía</time>
+    </footer>
+    <div
+      class="visually-hidden"
+      id="announcer"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+  </body>
 </html>
