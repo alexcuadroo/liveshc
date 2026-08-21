@@ -1,6 +1,6 @@
 const POLL_INTERVAL = 30_000;
 const state = { timer: null, skinTemplate: 'https://mc-heads.net/body/{uuid}/180', hasData: false };
-const fallbackSkin = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 360"><rect width="180" height="360" fill="#241b18"/><rect x="52" y="25" width="76" height="76" fill="#66564f"/><rect x="40" y="108" width="100" height="126" fill="#4b3d38"/><rect x="18" y="112" width="24" height="146" fill="#66564f"/><rect x="138" y="112" width="24" height="146" fill="#66564f"/><rect x="45" y="234" width="38" height="116" fill="#66564f"/><rect x="97" y="234" width="38" height="116" fill="#66564f"/></svg>')}`;
+const fallbackSkin = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 360"><path fill="#241b18" d="M0 0h180v360H0z"/><path fill="#66564f" d="M52 25h76v76H52z"/><path fill="#4b3d38" d="M40 108h100v126H40z"/><path fill="#66564f" d="M18 112h24v146H18zm120 0h24v146h-24zM45 234h38v116H45zm52 0h38v116H97z"/></svg>')}`;
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
