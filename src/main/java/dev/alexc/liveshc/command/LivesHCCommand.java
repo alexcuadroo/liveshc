@@ -79,6 +79,7 @@ public final class LivesHCCommand implements CommandExecutor, TabCompleter {
         }
 
         AddResult result = plugin.getLivesManager().addLives(target.getUniqueId(), amount);
+        plugin.getWebSnapshotService().publishPlayer(target, true);
         if (result.shared()) {
             sender.sendMessage("Se añadieron " + result.added() + " vidas al contador compartido"
                     + ". Ahora tiene " + result.current() + "/" + plugin.getMaximumLives() + ".");

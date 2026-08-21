@@ -91,6 +91,14 @@ public final class LivesManager {
         return getLives(playerId, plugin.isSharedLivesEnabled());
     }
 
+    public Map<UUID, Integer> getKnownIndividualLives() {
+        return Map.copyOf(lives);
+    }
+
+    public Integer getStoredSharedLives() {
+        return sharedLives;
+    }
+
     public int getLives(UUID playerId, boolean shared) {
         if (shared) {
             return Math.min(Math.max(ensureSharedLives(), 0), plugin.getMaximumLives());

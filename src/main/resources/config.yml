@@ -15,3 +15,12 @@ comando-sin-vidas: "gamemode spectator %player%"
 # Segundos de espera entre la muerte y la ejecución del comando.
 # Usa 0 para ejecutarlo inmediatamente.
 delay-comando-segundos: 0
+
+# Sincronización opcional con la web pública. El plugin sigue funcionando y
+# guardando las vidas en players.yml aunque la API no esté disponible.
+web:
+  habilitada: false
+  api-url: "https://tu-dominio.example/internal/v1/snapshot"
+  token: "cambia-este-token"
+  server-id: "principal"
+  intervalo-segundos: 30

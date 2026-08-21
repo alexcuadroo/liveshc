@@ -9,6 +9,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.UUID;
 
@@ -22,15 +23,22 @@ public final class PlayerLivesListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
         plugin.getLivesManager().ensurePlayer(event.getPlayer().getUniqueId());
+        plugin.getWebSnapshotService().publishPlayer(event.getPlayer(), true);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         LifeChange change = plugin.getLivesManager().removeLife(player.getUniqueId());
+        plugin.getWebSnapshotService().publishPlayer(player, true);
         if (change.reachedZero()) {
             scheduleNoLivesCommand(player.getUniqueId(), player.getName(), change.shared());
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        plugin.getWebSnapshotService().publishPlayer(event.getPlayer(), false);
     }
 
     private void scheduleNoLivesCommand(UUID playerId, String playerName, boolean shared) {

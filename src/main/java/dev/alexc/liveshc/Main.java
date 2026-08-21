@@ -4,6 +4,7 @@ import dev.alexc.liveshc.command.LivesHCCommand;
 import dev.alexc.liveshc.listener.PlayerLivesListener;
 import dev.alexc.liveshc.placeholder.LivesHCExpansion;
 import dev.alexc.liveshc.storage.LivesManager;
+import dev.alexc.liveshc.web.WebSnapshotService;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -21,6 +22,7 @@ public final class Main extends JavaPlugin {
     private boolean sharedLivesEnabled;
     private String noLivesCommand;
     private LivesManager livesManager;
+    private WebSnapshotService webSnapshotService;
 
     @Override
     public void onEnable() {
@@ -35,11 +37,16 @@ public final class Main extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerLivesListener(this), this);
         registerCommand();
         registerPlaceholderExpansion();
+        webSnapshotService = new WebSnapshotService(this);
+        webSnapshotService.start();
         getLogger().info("LivesHC habilitado correctamente.");
     }
 
     @Override
     public void onDisable() {
+        if (webSnapshotService != null) {
+            webSnapshotService.stop();
+        }
         if (livesManager != null) {
             livesManager.save();
         }
@@ -110,6 +117,9 @@ public final class Main extends JavaPlugin {
             loadSettings();
             livesManager.clampToMaximum(maximumLives);
             livesManager.ensureCurrentModeInitialized();
+            if (webSnapshotService != null) {
+                webSnapshotService.reload();
+            }
             return true;
         } catch (IOException | InvalidConfigurationException | RuntimeException exception) {
             getLogger().severe("No se pudo recargar config.yml: " + exception.getMessage());
@@ -143,5 +153,9 @@ public final class Main extends JavaPlugin {
 
     public LivesManager getLivesManager() {
         return livesManager;
+    }
+
+    public WebSnapshotService getWebSnapshotService() {
+        return webSnapshotService;
     }
 }
