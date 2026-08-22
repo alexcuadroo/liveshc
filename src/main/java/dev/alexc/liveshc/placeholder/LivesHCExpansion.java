@@ -37,6 +37,9 @@ public final class LivesHCExpansion extends PlaceholderExpansion {
         if (params.equalsIgnoreCase("maxvidas")) {
             return Integer.toString(plugin.getMaximumLives());
         }
+        if (params.equalsIgnoreCase("intentos")) {
+            return Long.toString(plugin.getRecordsManager().getNoLivesCommandExecutions());
+        }
         if (params.equalsIgnoreCase("vidas")) {
             if (player == null) {
                 return null;

@@ -59,7 +59,10 @@ test('accepts a valid authenticated snapshot', async () => {
     .set('Authorization', `Bearer ${config.INGEST_TOKEN}`)
     .send(validSnapshot);
   assert.equal(response.status, 204);
-  assert.ok(pool.queries.some(item => item.sql.includes('INSERT INTO servers')));
+  const serverUpsert = pool.queries.find(item => item.sql.includes('INSERT INTO servers'));
+  assert.ok(serverUpsert);
+  assert.equal(serverUpsert.params[3], 10);
+  assert.ok(serverUpsert.sql.includes('no_lives_command_executions = EXCLUDED.no_lives_command_executions'));
 });
 
 test('public response contains only configured featured UUIDs', async () => {

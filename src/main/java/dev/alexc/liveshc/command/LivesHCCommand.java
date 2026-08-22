@@ -47,7 +47,7 @@ public final class LivesHCCommand implements CommandExecutor, TabCompleter {
         }
 
         if (plugin.reloadLivesConfig()) {
-            sender.sendMessage("Configuración de LivesHC recargada correctamente.");
+            sender.sendMessage("Configuración y records.yml de LivesHC recargados correctamente.");
         } else {
             sender.sendMessage("No se pudo recargar la configuración. Revisa la consola.");
         }

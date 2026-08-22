@@ -124,6 +124,7 @@ public final class Main extends JavaPlugin {
             loadSettings();
             livesManager.clampToMaximum(maximumLives);
             livesManager.ensureCurrentModeInitialized();
+            recordsManager.load();
             if (webSnapshotService != null) {
                 webSnapshotService.reload();
             }
