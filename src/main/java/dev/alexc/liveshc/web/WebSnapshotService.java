@@ -115,6 +115,8 @@ public final class WebSnapshotService {
                 .append("\"serverId\":").append(quote(serverId)).append(',')
                 .append("\"capturedAt\":").append(quote(Instant.now().toString())).append(',')
                 .append("\"resetOnline\":").append(resetOnline || shuttingDown).append(',')
+                .append("\"noLivesCommandExecutions\":")
+                .append(plugin.getRecordsManager().getNoLivesCommandExecutions()).append(',')
                 .append("\"livesMode\":").append(quote(plugin.isSharedLivesEnabled() ? "shared" : "individual")).append(',')
                 .append("\"sharedLives\":");
         Integer shared = plugin.getLivesManager().getStoredSharedLives();

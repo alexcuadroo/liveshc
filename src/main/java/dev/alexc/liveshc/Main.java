@@ -4,6 +4,7 @@ import dev.alexc.liveshc.command.LivesHCCommand;
 import dev.alexc.liveshc.listener.PlayerLivesListener;
 import dev.alexc.liveshc.placeholder.LivesHCExpansion;
 import dev.alexc.liveshc.storage.LivesManager;
+import dev.alexc.liveshc.storage.RecordsManager;
 import dev.alexc.liveshc.web.WebSnapshotService;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
@@ -22,6 +23,7 @@ public final class Main extends JavaPlugin {
     private boolean sharedLivesEnabled;
     private String noLivesCommand;
     private LivesManager livesManager;
+    private RecordsManager recordsManager;
     private WebSnapshotService webSnapshotService;
 
     @Override
@@ -33,6 +35,8 @@ public final class Main extends JavaPlugin {
         livesManager.load();
         livesManager.clampToMaximum(maximumLives);
         livesManager.ensureCurrentModeInitialized();
+        recordsManager = new RecordsManager(this);
+        recordsManager.load();
 
         getServer().getPluginManager().registerEvents(new PlayerLivesListener(this), this);
         registerCommand();
@@ -49,6 +53,9 @@ public final class Main extends JavaPlugin {
         }
         if (livesManager != null) {
             livesManager.save();
+        }
+        if (recordsManager != null) {
+            recordsManager.save();
         }
     }
 
@@ -153,6 +160,10 @@ public final class Main extends JavaPlugin {
 
     public LivesManager getLivesManager() {
         return livesManager;
+    }
+
+    public RecordsManager getRecordsManager() {
+        return recordsManager;
     }
 
     public WebSnapshotService getWebSnapshotService() {

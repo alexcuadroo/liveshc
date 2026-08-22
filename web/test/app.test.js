@@ -27,6 +27,7 @@ function poolWithRows(rows = []) {
 
 const validSnapshot = {
   serverId: 'principal', capturedAt: '2026-08-20T12:00:00Z', resetOnline: false,
+  noLivesCommandExecutions: 10,
   livesMode: 'individual', sharedLives: null,
   players: [{
     uuid: config.FEATURED_PLAYER_1_UUID, name: 'Alex', individualLives: 3,
@@ -63,7 +64,7 @@ test('accepts a valid authenticated snapshot', async () => {
 
 test('public response contains only configured featured UUIDs', async () => {
   const rows = [{
-    lives_mode: 'shared', shared_lives: 2, captured_at: new Date(),
+    lives_mode: 'shared', shared_lives: 2, no_lives_command_executions: '10', captured_at: new Date(),
     uuid: config.FEATURED_PLAYER_1_UUID, name: 'Alex', individual_lives: 4,
     play_time_seconds: '3600', online: true, world: 'minecraft:overworld', dimension: 'NORMAL',
     x: 1, y: 2, z: 3, last_seen_at: new Date(), updated_at: new Date()
@@ -73,6 +74,7 @@ test('public response contains only configured featured UUIDs', async () => {
   assert.deepEqual(response.body.players.map(player => player.uuid),
     [config.FEATURED_PLAYER_1_UUID, config.FEATURED_PLAYER_2_UUID]);
   assert.equal(response.body.players[0].lives, 2);
+  assert.equal(response.body.server.noLivesCommandExecutions, 10);
   assert.equal(response.body.players[1].name, null);
 });
 

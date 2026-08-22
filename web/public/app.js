@@ -68,6 +68,14 @@ function renderLivesMode(server) {
     : lives === 0 ? 'Sin vidas restantes' : '♥'.repeat(Math.min(lives, 20)) + (lives > 20 ? ` +${lives - 20}` : '');
 }
 
+function renderAttemptRecord(server) {
+  const value = server?.noLivesCommandExecutions;
+  document.querySelector('#attempt-number').value = Number.isSafeInteger(value) ? value : '—';
+  document.querySelector('#attempt-number').textContent = Number.isSafeInteger(value)
+    ? new Intl.NumberFormat('es').format(value)
+    : '—';
+}
+
 function setConnection(kind, text) {
   const element = document.querySelector('#sync-state');
   element.className = `sync-state ${kind}`;
@@ -79,6 +87,7 @@ async function refresh() {
     const response = await fetch('/api/v1/versus', { headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
+    renderAttemptRecord(data.server);
     renderLivesMode(data.server);
     data.players.forEach(renderPlayer);
     state.hasData = true;

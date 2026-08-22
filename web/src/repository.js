@@ -3,11 +3,14 @@ export async function saveSnapshot(pool, snapshot) {
   try {
     await client.query('BEGIN');
     await client.query(`
-      INSERT INTO servers (id, lives_mode, shared_lives, captured_at, updated_at)
-      VALUES ($1, $2, $3, $4, now())
+      INSERT INTO servers (id, lives_mode, shared_lives, no_lives_command_executions, captured_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, now())
       ON CONFLICT (id) DO UPDATE SET lives_mode = EXCLUDED.lives_mode,
-        shared_lives = EXCLUDED.shared_lives, captured_at = EXCLUDED.captured_at, updated_at = now()
-    `, [snapshot.serverId, snapshot.livesMode, snapshot.sharedLives, snapshot.capturedAt]);
+        shared_lives = EXCLUDED.shared_lives,
+        no_lives_command_executions = EXCLUDED.no_lives_command_executions,
+        captured_at = EXCLUDED.captured_at, updated_at = now()
+    `, [snapshot.serverId, snapshot.livesMode, snapshot.sharedLives,
+      snapshot.noLivesCommandExecutions, snapshot.capturedAt]);
 
     if (snapshot.resetOnline) {
       await client.query('UPDATE player_snapshots SET online = false WHERE server_id = $1', [snapshot.serverId]);
@@ -47,7 +50,8 @@ export async function saveSnapshot(pool, snapshot) {
 
 export async function getVersus(pool, config) {
   const result = await pool.query(`
-    SELECT s.lives_mode, s.shared_lives, s.captured_at, p.uuid, p.name, p.individual_lives,
+    SELECT s.lives_mode, s.shared_lives, s.no_lives_command_executions, s.captured_at,
+      p.uuid, p.name, p.individual_lives,
       p.play_time_seconds, p.online, p.world, p.dimension, p.x, p.y, p.z,
       p.last_seen_at, p.updated_at
     FROM servers s
@@ -60,7 +64,7 @@ export async function getVersus(pool, config) {
   const ids = [config.FEATURED_PLAYER_1_UUID, config.FEATURED_PLAYER_2_UUID];
   return {
     server: server ? { id: config.SERVER_ID, livesMode: server.lives_mode, sharedLives: server.shared_lives,
-      capturedAt: server.captured_at } : null,
+      noLivesCommandExecutions: Number(server.no_lives_command_executions), capturedAt: server.captured_at } : null,
     players: ids.map(uuid => {
       const row = byUuid.get(uuid);
       if (!row) return { uuid, name: null, lives: null, online: false, playTimeSeconds: null,

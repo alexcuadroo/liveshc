@@ -69,7 +69,9 @@ public final class PlayerLivesListener implements Listener {
     private void executeNoLivesCommand(UUID playerId, String parsedCommand, boolean shared) {
         boolean dispatched = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
         if (dispatched) {
+            plugin.getRecordsManager().recordNoLivesCommandExecution();
             plugin.getLivesManager().resetLives(playerId, shared);
+            plugin.getWebSnapshotService().publishAll(false);
         } else {
             plugin.getLogger().warning("El comando sin vidas no fue reconocido: " + parsedCommand);
         }

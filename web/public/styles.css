@@ -86,9 +86,26 @@ main { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(2.5
 h1 { margin: .65rem auto clamp(2rem, 5vw, 4rem); text-align: center; text-transform: uppercase; font: 800 clamp(2.7rem, 8vw, 6.8rem)/.82 "Barlow Condensed", sans-serif; letter-spacing: -.035em; }
 h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: italic; }
 
+.attempt-record {
+  position: relative;
+  width: min(30rem, 100%);
+  margin: calc(clamp(2rem, 5vw, 4rem) * -.55) auto clamp(2rem, 4vw, 3rem);
+  padding: 1.25rem 1.5rem 1.35rem;
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(216,58,46,.18), transparent 58%), var(--panel);
+  box-shadow: 0 1.5rem 4rem rgba(0,0,0,.3);
+  text-align: center;
+  overflow: hidden;
+}
+.attempt-record::before { content: "#"; position: absolute; left: -.05em; top: -.25em; color: rgba(244,234,219,.04); font: 800 10rem/1 "Barlow Condensed", sans-serif; }
+.attempt-label, .attempt-caption { position: relative; display: block; text-transform: uppercase; letter-spacing: .16em; }
+.attempt-label { color: var(--blood); font-size: .68rem; font-weight: 600; }
+.attempt-number { position: relative; display: block; margin: .12rem 0; color: var(--ink); font: italic 800 clamp(4.5rem, 12vw, 8rem)/.8 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
+.attempt-caption { color: var(--muted); font-size: .58rem; line-height: 1.5; }
+
 .shared-lives {
   width: min(38rem, 100%);
-  margin: calc(clamp(2rem, 5vw, 4rem) * -.45) auto clamp(2rem, 4vw, 3rem);
+  margin: 0 auto clamp(2rem, 4vw, 3rem);
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
