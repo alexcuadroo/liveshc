@@ -43,6 +43,7 @@ public final class Main extends JavaPlugin {
         registerPlaceholderExpansion();
         webSnapshotService = new WebSnapshotService(this);
         webSnapshotService.start();
+        new UpdateChecker(this).checkForUpdates();
         getLogger().info("LivesHC habilitado correctamente.");
     }
 
