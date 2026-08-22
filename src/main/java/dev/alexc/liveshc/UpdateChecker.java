@@ -30,7 +30,7 @@ public final class UpdateChecker {
                 connection.setRequestMethod("GET");
                 connection.setRequestProperty("Accept", "application/vnd.github+json");
                 connection.setRequestProperty("X-GitHub-Api-Version", "2022-11-28");
-                connection.setRequestProperty("User-Agent", plugin.getName() + "/" + plugin.getDescription().getVersion());
+                connection.setRequestProperty("User-Agent", plugin.getName() + "/" + plugin.getPluginMeta().getVersion());
                 connection.setConnectTimeout(5000);
                 connection.setReadTimeout(5000);
 
@@ -56,7 +56,7 @@ public final class UpdateChecker {
                 }
 
                 String latestVersion = normalizeVersion(latestTag);
-                String currentVersion = normalizeVersion(plugin.getDescription().getVersion());
+                String currentVersion = normalizeVersion(plugin.getPluginMeta().getVersion());
                 if (!currentVersion.equalsIgnoreCase(latestVersion)) {
                     plugin.getLogger().info("========================================");
                     plugin.getLogger().info("¡Nueva versión disponible! " + currentVersion + " -> " + latestVersion);

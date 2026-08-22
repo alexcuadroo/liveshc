@@ -39,7 +39,9 @@ public final class Main extends JavaPlugin {
         recordsManager.load();
 
         getServer().getPluginManager().registerEvents(new PlayerLivesListener(this), this);
-        registerCommand();
+        if (!registerCommand()) {
+            return;
+        }
         registerPlaceholderExpansion();
         webSnapshotService = new WebSnapshotService(this);
         webSnapshotService.start();
@@ -60,17 +62,18 @@ public final class Main extends JavaPlugin {
         }
     }
 
-    private void registerCommand() {
+    private boolean registerCommand() {
         PluginCommand command = getCommand("liveshc");
         if (command == null) {
             getLogger().severe("No se pudo registrar /liveshc. Revisa plugin.yml.");
             getServer().getPluginManager().disablePlugin(this);
-            return;
+            return false;
         }
 
         LivesHCCommand executor = new LivesHCCommand(this);
         command.setExecutor(executor);
         command.setTabCompleter(executor);
+        return true;
     }
 
     private void registerPlaceholderExpansion() {

@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.alexc.liveshc"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -22,6 +22,7 @@ java {
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
     options.release.set(25)
+    options.compilerArgs.add("-Xlint:deprecation")
 }
 
 tasks.processResources {
