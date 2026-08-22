@@ -27,30 +27,34 @@
     <main id="duelo" tabindex="-1">
       <h1>Dos jugadores.<br /><em>Y... muchos intentos.</em></h1>
 
-      <section class="attempt-record" aria-labelledby="attempt-title">
-        <span class="attempt-label" id="attempt-title">Intento hardcore</span>
-        <output class="attempt-number" id="attempt-number" aria-live="polite">—</output>
-        <span class="attempt-caption">veces que el mundo puso a prueba al equipo</span>
-      </section>
+      <div class="match-status" aria-label="Estado de la partida">
+        <section class="attempt-record" aria-labelledby="attempt-title">
+          <div class="attempt-copy">
+            <span class="attempt-label" id="attempt-title">Intento hardcore</span>
+            <span class="attempt-caption">veces que el mundo puso a prueba al equipo</span>
+          </div>
+          <output class="attempt-number" id="attempt-number" aria-live="polite">—</output>
+        </section>
 
-      <section
-        class="shared-lives"
-        id="shared-lives"
-        aria-labelledby="shared-lives-title"
-        hidden
-      >
-        <div>
-          <span class="shared-kicker">Modo cooperativo</span>
-          <h2 id="shared-lives-title">Vidas compartidas</h2>
-        </div>
-        <output
-          class="shared-count"
-          id="shared-count"
-          aria-label="Vidas compartidas restantes"
-          >—</output
+        <section
+          class="shared-lives"
+          id="shared-lives"
+          aria-labelledby="shared-lives-title"
+          hidden
         >
-        <div class="shared-hearts" id="shared-hearts" aria-hidden="true"></div>
-      </section>
+          <div class="shared-copy">
+            <span class="shared-kicker">Modo cooperativo</span>
+            <h2 id="shared-lives-title">Vidas compartidas</h2>
+            <div class="shared-hearts" id="shared-hearts" aria-hidden="true"></div>
+          </div>
+          <output
+            class="shared-count"
+            id="shared-count"
+            aria-label="Vidas compartidas restantes"
+            >—</output
+          >
+        </section>
+      </div>
 
       <section class="arena" aria-labelledby="arena-title">
         <h2 id="arena-title" class="visually-hidden">Jugadores enfrentados</h2>

@@ -86,40 +86,60 @@ main { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(2.5
 h1 { margin: .65rem auto clamp(2rem, 5vw, 4rem); text-align: center; text-transform: uppercase; font: 800 clamp(2.7rem, 8vw, 6.8rem)/.82 "Barlow Condensed", sans-serif; letter-spacing: -.035em; }
 h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: italic; }
 
+.match-status {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+  width: min(58rem, 100%);
+  margin: calc(clamp(2rem, 5vw, 4rem) * -.55) auto clamp(2rem, 4vw, 3rem);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 1.5rem 4rem rgba(0,0,0,.3);
+  container: match-status / inline-size;
+}
+.match-status::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  inset: auto 0 -.08rem;
+  height: .16rem;
+  background: linear-gradient(90deg, var(--blood), var(--blood-dark) 68%, transparent);
+  pointer-events: none;
+}
 .attempt-record {
   position: relative;
-  width: min(30rem, 100%);
-  margin: calc(clamp(2rem, 5vw, 4rem) * -.55) auto clamp(2rem, 4vw, 3rem);
-  padding: 1.25rem 1.5rem 1.35rem;
-  border: 1px solid var(--line);
-  background: linear-gradient(135deg, rgba(216,58,46,.18), transparent 58%), var(--panel);
-  box-shadow: 0 1.5rem 4rem rgba(0,0,0,.3);
-  text-align: center;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-width: 0;
+  padding: 1.2rem clamp(1.15rem, 3cqi, 2rem);
+  background: linear-gradient(135deg, rgba(216,58,46,.18), transparent 68%);
+  overflow: clip;
 }
-.attempt-record::before { content: "#"; position: absolute; left: -.05em; top: -.25em; color: rgba(244,234,219,.04); font: 800 10rem/1 "Barlow Condensed", sans-serif; }
+.attempt-record::before { content: "#"; position: absolute; left: -.04em; top: -.26em; color: rgba(244,234,219,.04); font: 800 8.5rem/1 "Barlow Condensed", sans-serif; }
+.attempt-copy { position: relative; z-index: 1; min-width: 0; }
 .attempt-label, .attempt-caption { position: relative; display: block; text-transform: uppercase; letter-spacing: .16em; }
 .attempt-label { color: var(--blood); font-size: .68rem; font-weight: 600; }
-.attempt-number { position: relative; display: block; margin: .12rem 0; color: var(--ink); font: italic 800 clamp(4.5rem, 12vw, 8rem)/.8 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
-.attempt-caption { color: var(--muted); font-size: .58rem; line-height: 1.5; }
+.attempt-number { position: relative; display: block; flex: 0 0 auto; margin-inline-start: auto; color: var(--ink); font: italic 800 clamp(4rem, 8cqi, 6.5rem)/.72 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
+.attempt-caption { max-width: 18rem; margin-top: .45rem; color: var(--muted); font-size: .56rem; line-height: 1.55; }
 
 .shared-lives {
-  width: min(38rem, 100%);
-  margin: 0 auto clamp(2rem, 4vw, 3rem);
-  display: grid;
-  grid-template-columns: 1fr auto;
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: .35rem 1.5rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--blood-dark);
-  border-left: .3rem solid var(--blood);
-  background: linear-gradient(90deg, rgba(216,58,46,.12), transparent), var(--panel);
-  box-shadow: 0 1rem 3rem rgba(0,0,0,.22);
+  gap: 1.5rem;
+  min-width: 0;
+  padding: 1.2rem clamp(1.15rem, 3cqi, 2rem);
+  border-left: 1px solid var(--line);
+  background: linear-gradient(100deg, rgba(216,58,46,.08), transparent 70%);
 }
+.shared-lives::before { content: "CO-OP"; position: absolute; right: .06em; top: -.13em; color: rgba(244,234,219,.028); font: 800 6.2rem/1 "Barlow Condensed", sans-serif; letter-spacing: -.04em; }
+.shared-copy { position: relative; z-index: 1; min-width: 0; }
 .shared-kicker { color: var(--blood); font-size: .62rem; text-transform: uppercase; letter-spacing: .14em; }
-.shared-lives h2 { margin: .1rem 0 0; font: 800 clamp(1.5rem, 4vw, 2.2rem)/1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
-.shared-count { grid-row: span 2; color: var(--ink); font: 800 clamp(2.8rem, 7vw, 4.6rem)/.8 "Barlow Condensed", sans-serif; }
-.shared-hearts { grid-column: 1 / -1; min-height: 1rem; color: var(--blood); letter-spacing: .22rem; text-shadow: 0 .12rem 0 var(--blood-dark); }
+.shared-lives h2 { margin: .08rem 0 0; font: 800 clamp(1.55rem, 3.8cqi, 2.35rem)/.95 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+.shared-count { position: relative; z-index: 1; flex: 0 0 auto; margin-inline-start: auto; color: var(--ink); font: 800 clamp(4rem, 8cqi, 6.5rem)/.72 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
+.shared-hearts { min-height: 1rem; margin-top: .42rem; color: var(--blood); letter-spacing: .22rem; text-shadow: 0 .12rem 0 var(--blood-dark); }
 .arena.shared-mode { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
 .arena.shared-mode .individual-lives { display: none; }
 
@@ -168,14 +188,21 @@ footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; 
 
 @media (max-width: 760px) {
   main { padding-top: 2.5rem; }
+  .match-status { grid-template-columns: 1fr; }
+  .shared-lives { border-top: 1px solid var(--line); border-left: 0; }
   .arena { grid-template-columns: 1fr; gap: 0; }
   .arena.shared-mode { grid-template-columns: 1fr; gap: 1rem; }
   .fighter { min-height: 390px; }
   .fighter-inner { grid-template-columns: minmax(7rem, .7fr) 1.3fr; }
   .versus { width: 4.5rem; margin: -1.25rem auto; aspect-ratio: 1; }
   .fighter-two .fighter-inner { direction: ltr; }
-  .shared-lives { margin-top: -1rem; }
   footer { align-items: flex-start; flex-direction: column; }
+}
+
+@container match-status (max-width: 430px) {
+  .attempt-record, .shared-lives { padding: 1rem; }
+  .attempt-caption { max-width: 13rem; }
+  .attempt-number, .shared-count { font-size: clamp(3.5rem, 20cqi, 5rem); }
 }
 
 @container (max-width: 390px) {
