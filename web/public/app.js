@@ -76,12 +76,6 @@ function renderAttemptRecord(server) {
     : '—';
 }
 
-function setConnection(kind, text) {
-  const element = document.querySelector('#sync-state');
-  element.className = `sync-state ${kind}`;
-  element.lastChild.textContent = ` ${text}`;
-}
-
 async function refresh() {
   try {
     const response = await fetch('/api/v1/versus', { headers: { Accept: 'application/json' } });
@@ -91,11 +85,9 @@ async function refresh() {
     renderLivesMode(data.server);
     data.players.forEach(renderPlayer);
     state.hasData = true;
-    setConnection('online', 'Datos actualizados');
     document.querySelector('#last-update').textContent = `Actualizado ${new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}`;
     document.querySelector('#announcer').textContent = 'Estadísticas actualizadas';
   } catch {
-    setConnection('error', state.hasData ? 'Mostrando últimos datos' : 'Sin conexión');
     if (!state.hasData) document.querySelector('#announcer').textContent = 'No fue posible cargar las estadísticas';
   }
 }

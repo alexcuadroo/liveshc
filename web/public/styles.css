@@ -76,10 +76,6 @@ body::before {
 }
 .brand { font-family: "Barlow Condensed", sans-serif; font-size: 1.25rem; font-weight: 800; letter-spacing: .06em; }
 .brand-mark { color: var(--blood); margin-right: .4rem; }
-.sync-state { color: var(--muted); display: flex; align-items: center; gap: .55rem; }
-.pulse { width: .55rem; height: .55rem; border-radius: 50%; background: var(--muted); }
-.sync-state.online .pulse { background: var(--alive); box-shadow: 0 0 0 .3rem rgba(123,201,111,.12); }
-.sync-state.error .pulse { background: var(--blood); }
 
 main { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(2.5rem, 7vw, 6rem) 0 2rem; }
 .eyebrow { color: var(--blood); text-transform: uppercase; letter-spacing: .18em; font-size: .75rem; font-weight: 600; text-align: center; }
@@ -179,6 +175,9 @@ h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: i
 .versus span:last-child { margin-left: .42em; color: var(--blood); }
 .privacy-note { margin: 1.5rem auto 0; max-width: 50rem; color: var(--muted); text-align: center; font-size: .7rem; line-height: 1.6; }
 footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; color: var(--muted); }
+.github-link { display: inline-flex; align-items: center; gap: .5rem; color: var(--ink); text-decoration: none; }
+.github-link:hover { color: var(--blood); }
+.github-link svg { width: 1.15rem; height: 1.15rem; fill: currentColor; }
 
 .skeleton { animation: breathe 1.4s ease-in-out infinite alternate; }
 .skeleton .skin-wrap, .skeleton-line { background: rgba(255,255,255,.05); }
