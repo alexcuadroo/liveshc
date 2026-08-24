@@ -170,6 +170,10 @@ h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: i
   font-weight: 600;
   letter-spacing: .015em;
 }
+.survival { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; margin-top: 1.25rem; padding-top: .9rem; border-top: 1px solid var(--blood-dark); }
+.survival div { min-width: 0; }
+.survival span { display: block; margin-bottom: .2rem; color: var(--blood); font-size: .56rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.survival strong { display: block; overflow: hidden; color: var(--ink); font-size: clamp(.72rem, 2.6cqw, .9rem); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .versus { align-self: center; position: relative; z-index: 2; display: grid; place-content: center; margin: 0 -1rem; width: calc(100% + 2rem); aspect-ratio: 1; transform: rotate(45deg); border: 1px solid var(--blood); background: var(--coal); box-shadow: 0 0 2.5rem rgba(216,58,46,.18); font: italic 800 clamp(2rem, 5vw, 4.5rem)/.55 "Barlow Condensed", sans-serif; }
 .versus span { transform: rotate(-45deg); }
 .versus span:last-child { margin-left: .42em; color: var(--blood); }
@@ -207,5 +211,6 @@ footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; 
 @container (max-width: 390px) {
   .fighter-inner { grid-template-columns: 1fr 1.2fr; padding: 1rem; }
   .meta { grid-template-columns: 1fr; gap: .55rem; }
+  .survival { gap: .55rem; }
   .skin-wrap { min-height: 230px; }
 }

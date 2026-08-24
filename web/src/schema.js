@@ -11,7 +11,13 @@ const player = z.object({
   dimension: z.string().min(1).max(80).nullable(),
   x: nullableFinite,
   y: nullableFinite,
-  z: nullableFinite
+  z: nullableFinite,
+  lastSeenAt: z.iso.datetime({ offset: true }).nullable(),
+  level: z.number().int().min(0).nullable(),
+  totalExperience: z.number().int().min(0).nullable(),
+  walkedCentimeters: z.number().int().min(0).nullable(),
+  blocksMined: z.number().int().min(0).nullable(),
+  mobKills: z.number().int().min(0).nullable()
 }).strict().refine(value => {
   const coordinates = [value.x, value.y, value.z];
   return coordinates.every(item => item === null) || coordinates.every(item => item !== null);

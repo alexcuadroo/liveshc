@@ -3,6 +3,7 @@ package dev.alexc.liveshc.web;
 import dev.alexc.liveshc.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
@@ -85,35 +86,50 @@ public final class WebSnapshotService {
 
     public void publishPlayer(Player player, boolean online) {
         if (!enabled) return;
-        PlayerState state = capturePlayer(player, online);
-        send(encode(List.of(state), false, false), 1);
+        Instant capturedAt = Instant.now();
+        PlayerState state = capturePlayer(player, online, capturedAt);
+        send(encode(List.of(state), false, false, capturedAt), 1);
     }
 
     private String captureAll(boolean resetOnline, boolean shuttingDown) {
+        Instant capturedAt = Instant.now();
         Map<UUID, PlayerState> states = new LinkedHashMap<>();
         for (Map.Entry<UUID, Integer> entry : plugin.getLivesManager().getKnownIndividualLives().entrySet()) {
             OfflinePlayer offline = Bukkit.getOfflinePlayer(entry.getKey());
             states.put(entry.getKey(), PlayerState.offline(entry.getKey(), offline.getName(), entry.getValue()));
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
-            states.put(player.getUniqueId(), capturePlayer(player, !shuttingDown));
+            states.put(player.getUniqueId(), capturePlayer(player, !shuttingDown, capturedAt));
         }
-        return encode(new ArrayList<>(states.values()), resetOnline, shuttingDown);
+        return encode(new ArrayList<>(states.values()), resetOnline, shuttingDown, capturedAt);
     }
 
-    private PlayerState capturePlayer(Player player, boolean online) {
+    private PlayerState capturePlayer(Player player, boolean online, Instant capturedAt) {
         Location location = player.getLocation();
         return new PlayerState(player.getUniqueId(), player.getName(),
                 plugin.getLivesManager().getLives(player.getUniqueId(), false),
                 Math.max(0L, player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20L), online,
                 location.getWorld().getKey().toString(), location.getWorld().getEnvironment().name(),
-                location.getX(), location.getY(), location.getZ());
+                location.getX(), location.getY(), location.getZ(), capturedAt,
+                Math.max(0, player.getLevel()), Math.max(0L, player.getTotalExperience()),
+                Math.max(0L, player.getStatistic(Statistic.WALK_ONE_CM)), blocksMined(player),
+                Math.max(0L, player.getStatistic(Statistic.MOB_KILLS)));
     }
 
-    private String encode(List<PlayerState> players, boolean resetOnline, boolean shuttingDown) {
+    private static long blocksMined(Player player) {
+        long total = 0L;
+        for (Material material : Material.values()) {
+            if (material.isBlock()) {
+                total += Math.max(0, player.getStatistic(Statistic.MINE_BLOCK, material));
+            }
+        }
+        return total;
+    }
+
+    private String encode(List<PlayerState> players, boolean resetOnline, boolean shuttingDown, Instant capturedAt) {
         StringBuilder json = new StringBuilder(512).append('{')
                 .append("\"serverId\":").append(quote(serverId)).append(',')
-                .append("\"capturedAt\":").append(quote(Instant.now().toString())).append(',')
+                .append("\"capturedAt\":").append(quote(capturedAt.toString())).append(',')
                 .append("\"resetOnline\":").append(resetOnline || shuttingDown).append(',')
                 .append("\"noLivesCommandExecutions\":")
                 .append(plugin.getRecordsManager().getNoLivesCommandExecutions()).append(',')
@@ -170,9 +186,12 @@ public final class WebSnapshotService {
     }
 
     private record PlayerState(UUID uuid, String name, int individualLives, Long playTimeSeconds,
-                               boolean online, String world, String dimension, Double x, Double y, Double z) {
+                               boolean online, String world, String dimension, Double x, Double y, Double z,
+                               Instant lastSeenAt, Integer level, Long totalExperience, Long walkedCentimeters,
+                               Long blocksMined, Long mobKills) {
         static PlayerState offline(UUID uuid, String name, int lives) {
-            return new PlayerState(uuid, name, lives, null, false, null, null, null, null, null);
+            return new PlayerState(uuid, name, lives, null, false, null, null, null, null, null,
+                    null, null, null, null, null, null);
         }
 
         void appendJson(StringBuilder json) {
@@ -185,7 +204,13 @@ public final class WebSnapshotService {
                     .append(",\"dimension\":").append(quote(dimension))
                     .append(",\"x\":").append(x == null ? "null" : x)
                     .append(",\"y\":").append(y == null ? "null" : y)
-                    .append(",\"z\":").append(z == null ? "null" : z).append('}');
+                    .append(",\"z\":").append(z == null ? "null" : z)
+                    .append(",\"lastSeenAt\":").append(lastSeenAt == null ? "null" : quote(lastSeenAt.toString()))
+                    .append(",\"level\":").append(level == null ? "null" : level)
+                    .append(",\"totalExperience\":").append(totalExperience == null ? "null" : totalExperience)
+                    .append(",\"walkedCentimeters\":").append(walkedCentimeters == null ? "null" : walkedCentimeters)
+                    .append(",\"blocksMined\":").append(blocksMined == null ? "null" : blocksMined)
+                    .append(",\"mobKills\":").append(mobKills == null ? "null" : mobKills).append('}');
         }
     }
 }

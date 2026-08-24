@@ -13,6 +13,43 @@ function formatDuration(seconds) {
   return hours ? `${hours} h ${minutes} min` : `${minutes} min`;
 }
 
+function formatNumber(value, maximumFractionDigits = 0) {
+  if (value === null || value === undefined) return '—';
+  return new Intl.NumberFormat('es', { maximumFractionDigits }).format(value);
+}
+
+function formatDistance(centimeters) {
+  if (centimeters === null || centimeters === undefined) return '—';
+  const meters = centimeters / 100;
+  return meters >= 1000
+    ? `${formatNumber(meters / 1000, 1)} km`
+    : `${formatNumber(meters, 1)} m`;
+}
+
+function formatExperience(level, totalExperience) {
+  if (level === null || level === undefined || totalExperience === null || totalExperience === undefined) return '—';
+  return `Nv. ${formatNumber(level)} · ${formatNumber(totalExperience)} XP`;
+}
+
+function formatLastSignal(player) {
+  if (player.online) return 'En línea ahora';
+  if (!player.lastSeenAt) return '—';
+  const seenAt = new Date(player.lastSeenAt);
+  if (Number.isNaN(seenAt.getTime())) return '—';
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const seenDay = new Date(seenAt.getFullYear(), seenAt.getMonth(), seenAt.getDate());
+  const daysAgo = Math.round((today - seenDay) / 86_400_000);
+  const time = new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit' }).format(seenAt);
+  if (daysAgo === 0) return `hoy, ${time}`;
+  if (daysAgo === 1) return `ayer, ${time}`;
+
+  const options = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+  if (seenAt.getFullYear() !== now.getFullYear()) options.year = 'numeric';
+  return new Intl.DateTimeFormat('es', options).format(seenAt);
+}
+
 function formatLocation(location) {
   if (!location) return { dimension: 'Sin registrar', coordinates: '—' };
   const dimension = location.world?.split(':').at(-1)?.replaceAll('_', ' ') || location.dimension;
@@ -43,8 +80,14 @@ function renderPlayer(player, index) {
           <div><dt>Tiempo jugado</dt><dd>${formatDuration(player.playTimeSeconds)}</dd></div>
           <div><dt>Dimensión</dt><dd>${escapeHtml(location.dimension)}</dd></div>
           <div class="coordinates"><dt>Coordenadas XYZ</dt><dd>${location.coordinates}</dd></div>
-          <div><dt>Última señal</dt><dd>${player.updatedAt ? new Date(player.updatedAt).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '—'}</dd></div>
+          <div><dt>Última señal</dt><dd>${formatLastSignal(player)}</dd></div>
         </dl>
+        <section class="survival" aria-label="Resumen de supervivencia">
+          <div><span>Nivel · XP</span><strong>${formatExperience(player.level, player.totalExperience)}</strong></div>
+          <div><span>Caminado</span><strong>${formatDistance(player.walkedCentimeters)}</strong></div>
+          <div><span>Bloques rotos</span><strong>${formatNumber(player.blocksMined)}</strong></div>
+          <div><span>Mobs abatidos</span><strong>${formatNumber(player.mobKills)}</strong></div>
+        </section>
       </div>
     </div>`;
   article.querySelector('img').addEventListener('error', event => { event.currentTarget.src = fallbackSkin; }, { once: true });

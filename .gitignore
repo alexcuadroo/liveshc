@@ -1,3 +1,4 @@
 .gradle/
 .github/
 build/
+.vscode/settings.json

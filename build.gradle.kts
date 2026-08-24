@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.alexc.liveshc"
-version = "1.0.1"
+version = "1.1.0"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
