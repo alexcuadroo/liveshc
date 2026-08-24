@@ -63,7 +63,7 @@ body::before {
 .visually-hidden:where(:not(:focus-within, :active)) { position: absolute!important; clip-path: inset(50%)!important; overflow: hidden!important; width: 1px!important; height: 1px!important; margin: -1px!important; padding: 0!important; border: 0!important; white-space: nowrap!important; }
 :focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
 
-.masthead, footer {
+footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -77,7 +77,7 @@ body::before {
 .brand { font-family: "Barlow Condensed", sans-serif; font-size: 1.25rem; font-weight: 800; letter-spacing: .06em; }
 .brand-mark { color: var(--blood); margin-right: .4rem; }
 
-main { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(2.5rem, 7vw, 6rem) 0 2rem; }
+main { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(1.5rem, 4vw, 3rem) 0 2rem; }
 .eyebrow { color: var(--blood); text-transform: uppercase; letter-spacing: .18em; font-size: .75rem; font-weight: 600; text-align: center; }
 h1 { margin: .65rem auto clamp(2rem, 5vw, 4rem); text-align: center; text-transform: uppercase; font: 800 clamp(2.7rem, 8vw, 6.8rem)/.82 "Barlow Condensed", sans-serif; letter-spacing: -.035em; }
 h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: italic; }
@@ -175,9 +175,10 @@ h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: i
 .versus span:last-child { margin-left: .42em; color: var(--blood); }
 .privacy-note { margin: 1.5rem auto 0; max-width: 50rem; color: var(--muted); text-align: center; font-size: .7rem; line-height: 1.6; }
 footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; color: var(--muted); }
+.footer-branding { display: flex; flex-wrap: wrap; align-items: safe center; gap: 1rem; }
 .github-link { display: inline-flex; align-items: center; gap: .5rem; color: var(--ink); text-decoration: none; }
 .github-link:hover { color: var(--blood); }
-.github-link svg { width: 1.15rem; height: 1.15rem; fill: currentColor; }
+.github-link svg { display: block; flex: none; width: 1.15rem; height: 1.15rem; fill: currentColor; }
 
 .skeleton { animation: breathe 1.4s ease-in-out infinite alternate; }
 .skeleton .skin-wrap, .skeleton-line { background: rgba(255,255,255,.05); }
@@ -186,7 +187,6 @@ footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms!important; animation-iteration-count: 1!important; scroll-behavior: auto!important; } }
 
 @media (max-width: 760px) {
-  main { padding-top: 2.5rem; }
   .match-status { grid-template-columns: 1fr; }
   .shared-lives { border-top: 1px solid var(--line); border-left: 0; }
   .arena { grid-template-columns: 1fr; gap: 0; }
