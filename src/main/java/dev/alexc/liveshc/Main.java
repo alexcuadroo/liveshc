@@ -1,6 +1,7 @@
 package dev.alexc.liveshc;
 
 import dev.alexc.liveshc.command.LivesHCCommand;
+import dev.alexc.liveshc.display.DeathDuelDisplay;
 import dev.alexc.liveshc.listener.PlayerLivesListener;
 import dev.alexc.liveshc.placeholder.LivesHCExpansion;
 import dev.alexc.liveshc.storage.LivesManager;
@@ -21,10 +22,15 @@ public final class Main extends JavaPlugin {
     private int maximumLives;
     private int noLivesCommandDelaySeconds;
     private boolean sharedLivesEnabled;
+    private boolean deathHudEnabled;
+    private int deathHudFadeInTicks;
+    private int deathHudStayTicks;
+    private int deathHudFadeOutTicks;
     private String noLivesCommand;
     private LivesManager livesManager;
     private RecordsManager recordsManager;
     private WebSnapshotService webSnapshotService;
+    private DeathDuelDisplay deathDuelDisplay;
 
     @Override
     public void onEnable() {
@@ -37,6 +43,7 @@ public final class Main extends JavaPlugin {
         livesManager.ensureCurrentModeInitialized();
         recordsManager = new RecordsManager(this);
         recordsManager.load();
+        deathDuelDisplay = new DeathDuelDisplay(this);
 
         getServer().getPluginManager().registerEvents(new PlayerLivesListener(this), this);
         if (!registerCommand()) {
@@ -115,6 +122,19 @@ public final class Main extends JavaPlugin {
         if (noLivesCommand == null) {
             noLivesCommand = "";
         }
+        deathHudEnabled = getConfig().getBoolean("hud-muerte.habilitado", true);
+        deathHudFadeInTicks = nonNegativeTicks("hud-muerte.fade-in-ticks", 5);
+        deathHudStayTicks = nonNegativeTicks("hud-muerte.duracion-ticks", 160);
+        deathHudFadeOutTicks = nonNegativeTicks("hud-muerte.fade-out-ticks", 10);
+    }
+
+    private int nonNegativeTicks(String path, int fallback) {
+        int value = getConfig().getInt(path, fallback);
+        if (value < 0) {
+            getLogger().warning(path + " no puede ser negativo; se usará " + fallback + ".");
+            return fallback;
+        }
+        return value;
     }
 
     public boolean reloadLivesConfig() {
@@ -141,6 +161,10 @@ public final class Main extends JavaPlugin {
 
     public int getLives(UUID playerId) {
         return livesManager.getLives(playerId);
+    }
+
+    public int getDeaths(UUID playerId) {
+        return livesManager.getDeaths(playerId);
     }
 
     public int getInitialLives() {
@@ -173,5 +197,25 @@ public final class Main extends JavaPlugin {
 
     public WebSnapshotService getWebSnapshotService() {
         return webSnapshotService;
+    }
+
+    public DeathDuelDisplay getDeathDuelDisplay() {
+        return deathDuelDisplay;
+    }
+
+    public boolean isDeathHudEnabled() {
+        return deathHudEnabled;
+    }
+
+    public int getDeathHudFadeInTicks() {
+        return deathHudFadeInTicks;
+    }
+
+    public int getDeathHudStayTicks() {
+        return deathHudStayTicks;
+    }
+
+    public int getDeathHudFadeOutTicks() {
+        return deathHudFadeOutTicks;
     }
 }

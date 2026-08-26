@@ -46,6 +46,12 @@ public final class LivesHCExpansion extends PlaceholderExpansion {
             }
             return Integer.toString(plugin.getLives(player.getUniqueId()));
         }
+        if (params.equalsIgnoreCase("muertes")) {
+            if (player == null) {
+                return null;
+            }
+            return Integer.toString(plugin.getDeaths(player.getUniqueId()));
+        }
         return null;
     }
 }

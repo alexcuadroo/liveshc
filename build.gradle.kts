@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.alexc.liveshc"
-version = "1.1.0"
+version = "1.2.0"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -27,4 +27,8 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.processResources {
     filteringCharset = "UTF-8"
+}
+
+tasks.jar {
+    archiveBaseName.set("liveshc")
 }

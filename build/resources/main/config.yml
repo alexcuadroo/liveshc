@@ -16,6 +16,15 @@ comando-sin-vidas: "gamemode spectator %player%"
 # Usa 0 para ejecutarlo inmediatamente.
 delay-comando-segundos: 0
 
+# HUD mostrado en cualquier muerte. En PvP lo reciben atacante y víctima;
+# en muertes ambientales lo recibe la víctima con un indicador de entorno.
+# Requiere el resource pack de HardcoreSounds que incluye assets/liveshc.
+hud-muerte:
+  habilitado: true
+  fade-in-ticks: 5
+  duracion-ticks: 160
+  fade-out-ticks: 10
+
 # Sincronización opcional con la web pública. El plugin sigue funcionando y
 # guardando las vidas en players.yml aunque la API no esté disponible.
 web:

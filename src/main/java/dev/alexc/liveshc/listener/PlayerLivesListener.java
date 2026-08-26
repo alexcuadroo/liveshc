@@ -29,8 +29,9 @@ public final class PlayerLivesListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-        LifeChange change = plugin.getLivesManager().removeLife(player.getUniqueId());
+        LifeChange change = plugin.getLivesManager().recordDeath(player.getUniqueId());
         plugin.getWebSnapshotService().publishPlayer(player, true);
+        plugin.getDeathDuelDisplay().show(event);
         if (change.reachedZero()) {
             scheduleNoLivesCommand(player.getUniqueId(), player.getName(), change.shared());
         }

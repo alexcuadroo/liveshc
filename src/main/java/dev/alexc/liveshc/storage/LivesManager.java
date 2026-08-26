@@ -12,11 +12,13 @@ import java.util.UUID;
 
 public final class LivesManager {
     private static final String PLAYERS_SECTION = "players";
+    private static final String DEATHS_SECTION = "deaths";
     private static final String SHARED_LIVES_PATH = "shared-lives";
 
     private final Main plugin;
     private final File playersFile;
     private final Map<UUID, Integer> lives = new HashMap<>();
+    private final Map<UUID, Integer> deaths = new HashMap<>();
     private Integer sharedLives;
     private YamlConfiguration playersConfig;
 
@@ -28,31 +30,54 @@ public final class LivesManager {
     public void load() {
         playersConfig = YamlConfiguration.loadConfiguration(playersFile);
         lives.clear();
+        deaths.clear();
         sharedLives = playersConfig.contains(SHARED_LIVES_PATH)
                 ? Math.max(0, playersConfig.getInt(SHARED_LIVES_PATH, 0))
                 : null;
 
         ConfigurationSection players = playersConfig.getConfigurationSection(PLAYERS_SECTION);
-        if (players == null) {
-            return;
+        if (players != null) {
+            for (String key : players.getKeys(false)) {
+                try {
+                    UUID playerId = UUID.fromString(key);
+                    int storedLives = Math.max(0, players.getInt(key, 0));
+                    lives.put(playerId, storedLives);
+                } catch (IllegalArgumentException exception) {
+                    plugin.getLogger().warning("Se ignoró un UUID inválido en players.yml: " + key);
+                }
+            }
         }
 
-        for (String key : players.getKeys(false)) {
+        ConfigurationSection storedDeaths = playersConfig.getConfigurationSection(DEATHS_SECTION);
+        if (storedDeaths == null) {
+            return;
+        }
+        for (String key : storedDeaths.getKeys(false)) {
             try {
                 UUID playerId = UUID.fromString(key);
-                int storedLives = Math.max(0, players.getInt(key, 0));
-                lives.put(playerId, storedLives);
+                deaths.put(playerId, Math.max(0, storedDeaths.getInt(key, 0)));
             } catch (IllegalArgumentException exception) {
-                plugin.getLogger().warning("Se ignoró un UUID inválido en players.yml: " + key);
+                plugin.getLogger().warning("Se ignoró un UUID inválido en deaths de players.yml: " + key);
             }
         }
     }
 
     public int ensurePlayer(UUID playerId) {
+        ensureDeaths(playerId);
         if (plugin.isSharedLivesEnabled()) {
             return ensureSharedLives();
         }
         return ensureIndividualPlayer(playerId);
+    }
+
+    private int ensureDeaths(UUID playerId) {
+        Integer current = deaths.get(playerId);
+        if (current != null) {
+            return current;
+        }
+        deaths.put(playerId, 0);
+        save();
+        return 0;
     }
 
     public void ensureCurrentModeInitialized() {
@@ -99,6 +124,10 @@ public final class LivesManager {
         return sharedLives;
     }
 
+    public int getDeaths(UUID playerId) {
+        return Math.max(0, deaths.getOrDefault(playerId, 0));
+    }
+
     public int getLives(UUID playerId, boolean shared) {
         if (shared) {
             return Math.min(Math.max(ensureSharedLives(), 0), plugin.getMaximumLives());
@@ -110,11 +139,13 @@ public final class LivesManager {
         return Math.min(Math.max(current, 0), plugin.getMaximumLives());
     }
 
-    public LifeChange removeLife(UUID playerId) {
+    public LifeChange recordDeath(UUID playerId) {
         boolean shared = plugin.isSharedLivesEnabled();
         int previous = shared ? ensureSharedLives() : ensureIndividualPlayer(playerId);
         int current = Math.max(0, previous - 1);
         setLives(playerId, current, shared);
+        int deathCount = (int) Math.min(Integer.MAX_VALUE, (long) getDeaths(playerId) + 1L);
+        deaths.put(playerId, deathCount);
         save();
         return new LifeChange(previous, current, shared);
     }
@@ -176,6 +207,10 @@ public final class LivesManager {
         playersConfig.set(PLAYERS_SECTION, null);
         for (Map.Entry<UUID, Integer> entry : lives.entrySet()) {
             playersConfig.set(PLAYERS_SECTION + "." + entry.getKey(), entry.getValue());
+        }
+        playersConfig.set(DEATHS_SECTION, null);
+        for (Map.Entry<UUID, Integer> entry : deaths.entrySet()) {
+            playersConfig.set(DEATHS_SECTION + "." + entry.getKey(), entry.getValue());
         }
         playersConfig.set(SHARED_LIVES_PATH, sharedLives);
 

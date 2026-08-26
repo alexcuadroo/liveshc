@@ -21,6 +21,7 @@ El plugin permite usar vidas individuales o un único contador compartido por to
 - Un servidor compatible con Paper API `26.1`.
 - Java 25.
 - PlaceholderAPI 2.11.6 o posterior, únicamente si se quieren utilizar placeholders.
+- El resource pack combinado generado por el proyecto HardcoreSounds para mostrar el rayo del HUD.
 
 ## Instalación
 
@@ -58,6 +59,13 @@ comando-sin-vidas: "gamemode spectator %player%"
 # Espera en segundos antes de ejecutar el comando. Usa 0 para no esperar.
 delay-comando-segundos: 0
 
+# HUD mostrado durante 8 segundos después de cualquier muerte.
+hud-muerte:
+  habilitado: true
+  fade-in-ticks: 5
+  duracion-ticks: 160
+  fade-out-ticks: 10
+
 # Integración opcional con el panel web.
 web:
   habilitada: false
@@ -85,6 +93,7 @@ Si PlaceholderAPI está instalado, LivesHC registra automáticamente estos place
 | Placeholder | Valor |
 | --- | --- |
 | `%liveshc_vidas%` | Vidas actuales del jugador o del contador compartido. |
+| `%liveshc_muertes%` | Muertes acumuladas del jugador. |
 | `%liveshc_maxvidas%` | Máximo de vidas configurado. |
 | `%liveshc_intentos%` | Cantidad de veces que se ejecutó correctamente el comando al llegar a cero vidas. |
 
@@ -93,6 +102,23 @@ Si PlaceholderAPI está instalado, LivesHC registra automáticamente estos place
 La carpeta [`web`](web) contiene una API y un panel público que muestran el estado del servidor. Esta integración está deshabilitada de forma predeterminada y no es necesaria para que el plugin funcione.
 
 Aunque la API no esté disponible, LivesHC continúa funcionando y conserva sus datos localmente. Las instrucciones de despliegue se encuentran en [`web/README.md`](web/README.md).
+
+## HUD de muertes
+
+Cuando un jugador mata a otro, ambos reciben un título temporal con sus cabezas y muertes acumuladas. En muertes ambientales o suicidios, la víctima ve el mismo layout con un indicador de entorno. Las cabezas se resuelven directamente por UUID; el rayo central usa la fuente `liveshc:duel` incluida en el resource pack combinado de HardcoreSounds.
+
+El HUD se configura con `hud-muerte` en `config.yml`. Las duraciones están expresadas en ticks (20 ticks = 1 segundo). Las muertes se guardan por UUID en la sección `deaths` de `players.yml`; la sección `players` conserva el formato anterior para mantener compatibilidad con los datos existentes.
+
+## Resource pack compartido con HardcoreSounds
+
+LivesHC y HardcoreSounds comparten deliberadamente un único resource pack obligatorio, mantenido y construido en el repositorio de HardcoreSounds. El ZIP contiene dos namespaces independientes:
+
+- `assets/hardcoresounds`: sonidos consumidos por HardcoreSounds.
+- `assets/liveshc`: fuente y textura del rayo consumidas por el HUD de LivesHC.
+
+LivesHC resuelve las cabezas de los jugadores por UUID mediante Paper/Adventure; esas skins no están almacenadas en el ZIP. Sin el namespace `assets/liveshc`, el contador continúa funcionando pero el rayo personalizado no se renderiza correctamente.
+
+No se debe publicar un segundo pack exclusivo para LivesHC ni configurar ambos packs por separado. Después de modificar assets de cualquiera de los dos plugins, ejecuta `scripts/build-resource-packs.ps1` en HardcoreSounds, publica nuevamente los ZIP generados y actualiza sus SHA-1 en la configuración que los envía a los jugadores.
 
 ## Compilar desde el código fuente
 
@@ -108,4 +134,4 @@ En Linux o macOS:
 ./gradlew build
 ```
 
-El archivo compilado se genera en `build/libs/`.
+El archivo compilado se genera como `build/libs/liveshc-1.2.0.jar`.
