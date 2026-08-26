@@ -1,0 +1,20 @@
+name: LivesHC
+version: '1.2.0'
+main: dev.alexc.liveshc.Main
+description: Gestiona las vidas de los jugadores y ejecuta una acción al agotarlas.
+api-version: '26.1'
+author: alexc
+softdepend: [PlaceholderAPI]
+
+commands:
+  liveshc:
+    description: Comandos administrativos de LivesHC.
+    usage: /liveshc reload o /liveshc add <jugador> <cantidad>
+
+permissions:
+  liveshc.reload:
+    description: Permite recargar la configuración de LivesHC.
+    default: op
+  liveshc.add:
+    description: Permite añadir vidas a un jugador conectado.
+    default: op
