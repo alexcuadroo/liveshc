@@ -97,9 +97,7 @@ function renderLivesMode(server) {
   const shared = server?.livesMode === 'shared';
   const panel = document.querySelector('#shared-lives');
   const arena = document.querySelector('.arena');
-  const versus = document.querySelector('.versus');
   panel.hidden = !shared;
-  versus.hidden = shared;
   arena.classList.toggle('shared-mode', shared);
   if (!shared) return;
 
@@ -109,6 +107,70 @@ function renderLivesMode(server) {
   document.querySelector('#shared-hearts').textContent = lives === null
     ? 'Sin datos'
     : lives === 0 ? 'Sin vidas restantes' : '♥'.repeat(Math.min(lives, 20)) + (lives > 20 ? ` +${lives - 20}` : '');
+}
+
+const DISPLAY_COPY = {
+  solo: {
+    eyebrow: 'Supervivencia en solitario',
+    title: 'Un jugador.<br /><em>Y... muchos intentos.</em>',
+    documentTitle: 'Supervivencia en solitario | LivesHC',
+    arenaTitle: 'Jugador destacado',
+    skipLink: 'Saltar al jugador'
+  },
+  coop: {
+    eyebrow: 'Supervivencia cooperativa',
+    title: 'Un equipo.<br /><em>Y... muchos intentos.</em>',
+    documentTitle: 'Supervivencia cooperativa | LivesHC',
+    arenaTitle: 'Equipo',
+    skipLink: 'Saltar al equipo'
+  }
+};
+
+function renderPlaceholder(index) {
+  const article = document.querySelector(`#player-${index}`);
+  article.classList.remove('skeleton');
+  article.dataset.number = String(index + 1).padStart(2, '0');
+  article.setAttribute('aria-busy', 'false');
+  article.innerHTML = `
+    <div class="fighter-inner">
+      <div class="skin-wrap"><img class="skin" src="${fallbackSkin}" alt="Sin jugador todavía" width="180" height="360"></div>
+      <div class="stats">
+        <div class="status">Esperando</div>
+        <h3 class="player-name">Sin jugador todavía</h3>
+        <div class="individual-lives">
+          <div class="lives-label">Vidas restantes</div>
+          <div class="hearts empty">El plugin aún no envió datos</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderDisplayMode(server) {
+  const mode = server?.displayMode ?? 'coop';
+  const copy = DISPLAY_COPY[mode];
+  const main = document.querySelector('#duelo');
+  const arena = document.querySelector('.arena');
+  const versus = document.querySelector('#versus-badge');
+  const second = document.querySelector('#player-1');
+  const arenaTitle = document.querySelector('#arena-title');
+
+  main.dataset.displayMode = mode;
+  document.querySelector('#mode-eyebrow').textContent = copy.eyebrow;
+  document.querySelector('#page-title').innerHTML = copy.title;
+  document.title = copy.documentTitle;
+  document.querySelector('.skip-link').textContent = copy.skipLink;
+  arenaTitle.textContent = copy.arenaTitle;
+  arena.classList.toggle('solo-mode', mode === 'solo');
+
+  if (mode === 'solo') {
+    versus.hidden = true;
+    second.hidden = true;
+  } else {
+    second.hidden = false;
+    versus.hidden = false;
+    versus.innerHTML = '<span>+</span>';
+    versus.classList.add('is-coop');
+  }
 }
 
 function renderAttemptRecord(server) {
@@ -125,8 +187,14 @@ async function refresh() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     renderAttemptRecord(data.server);
+    renderDisplayMode(data.server);
     renderLivesMode(data.server);
-    data.players.forEach(renderPlayer);
+    const mode = data.server?.displayMode ?? 'coop';
+    const expected = mode === 'solo' ? 1 : 2;
+    for (let index = 0; index < expected; index += 1) {
+      if (data.players[index]) renderPlayer(data.players[index], index);
+      else renderPlaceholder(index);
+    }
     state.hasData = true;
     document.querySelector('#last-update').textContent = `Actualizado ${new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}`;
     document.querySelector('#announcer').textContent = 'Estadísticas actualizadas';

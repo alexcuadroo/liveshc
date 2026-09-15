@@ -6,7 +6,13 @@ vidas-maximas: 5
 
 # Si es true, todos los jugadores usan un único contador de vidas.
 # Si es false, cada UUID conserva su propio contador.
+# No confundir con "modo": esto afecta a la lógica de vidas.
 vidas-compartidas: false
+
+# Modo de presentación para la web: "solo" (1 jugador) o "coop" (equipo de 2).
+# No afecta a las vidas, solo al título y a cómo la web muestra las skins.
+# La web lee este valor desde cada snapshot enviado por el plugin.
+modo: coop
 
 # Se ejecuta desde la consola cuando un jugador pasa de una vida a cero.
 # %player% se sustituye por el nombre del jugador. No es necesario escribir "/".

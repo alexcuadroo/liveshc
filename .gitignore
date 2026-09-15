@@ -1,4 +1,4 @@
 .gradle/
-.github/
+.github/modernize/
 build/
 .vscode/settings.json

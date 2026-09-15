@@ -8,15 +8,16 @@
       name="description"
       content="Estado en vivo de los jugadores de LivesHC"
     />
-    <title>Duelo de supervivencia | LivesHC</title>
+    <title>Supervivencia cooperativa | LivesHC</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/styles.css" />
     <script src="/app.js" defer></script>
   </head>
   <body>
-    <a class="skip-link" href="#duelo">Saltar al duelo</a>
-    <main id="duelo" tabindex="-1">
-      <h1>Dos jugadores.<br /><em>Y... muchos intentos.</em></h1>
+    <a class="skip-link" href="#duelo">Saltar al equipo</a>
+    <main id="duelo" tabindex="-1" data-display-mode="coop">
+      <p class="eyebrow" id="mode-eyebrow">Supervivencia cooperativa</p>
+      <h1 id="page-title">Un equipo.<br /><em>Y... muchos intentos.</em></h1>
 
       <div class="match-status" aria-label="Estado de la partida">
         <section class="attempt-record" aria-labelledby="attempt-title">
@@ -58,14 +59,14 @@
       </div>
 
       <section class="arena" aria-labelledby="arena-title">
-        <h2 id="arena-title" class="visually-hidden">Jugadores enfrentados</h2>
+        <h2 id="arena-title" class="visually-hidden">Equipo</h2>
         <article
           class="fighter fighter-one"
           id="player-0"
           aria-busy="true"
         ></article>
-        <div class="versus" aria-hidden="true">
-          <span>V</span><span>S</span>
+        <div class="versus is-coop" id="versus-badge" aria-hidden="true">
+          <span>+</span>
         </div>
         <article
           class="fighter fighter-two"

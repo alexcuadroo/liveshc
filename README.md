@@ -50,7 +50,13 @@ vidas-maximas: 5
 
 # true: un contador para todo el servidor.
 # false: un contador independiente por jugador.
+# No confundir con "modo": esto afecta a la lógica de vidas.
 vidas-compartidas: false
+
+# Modo de presentación para la web: "solo" (1 jugador) o "coop" (equipo de 2).
+# No afecta a las vidas, solo al título y a cómo la web muestra las skins.
+# La web lee este valor desde cada snapshot enviado por el plugin.
+modo: coop
 
 # Comando ejecutado por la consola cuando las vidas llegan a cero.
 # %player% se sustituye por el nombre del jugador.
@@ -134,4 +140,4 @@ En Linux o macOS:
 ./gradlew build
 ```
 
-El archivo compilado se genera como `build/libs/liveshc-1.2.0.jar`.
+El archivo compilado se genera como `build/libs/liveshc-1.3.0.jar`.

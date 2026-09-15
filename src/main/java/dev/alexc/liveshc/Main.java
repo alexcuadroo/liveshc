@@ -15,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.UUID;
 
 public final class Main extends JavaPlugin {
@@ -22,6 +23,7 @@ public final class Main extends JavaPlugin {
     private int maximumLives;
     private int noLivesCommandDelaySeconds;
     private boolean sharedLivesEnabled;
+    private String displayMode;
     private boolean deathHudEnabled;
     private int deathHudFadeInTicks;
     private int deathHudStayTicks;
@@ -118,6 +120,7 @@ public final class Main extends JavaPlugin {
         initialLives = configuredInitial;
         noLivesCommandDelaySeconds = configuredDelay;
         sharedLivesEnabled = getConfig().getBoolean("vidas-compartidas", false);
+        displayMode = parseDisplayMode(getConfig().getString("modo", "coop"));
         noLivesCommand = getConfig().getString("comando-sin-vidas", "");
         if (noLivesCommand == null) {
             noLivesCommand = "";
@@ -135,6 +138,15 @@ public final class Main extends JavaPlugin {
             return fallback;
         }
         return value;
+    }
+
+    private String parseDisplayMode(String raw) {
+        String normalized = raw == null ? "" : raw.trim().toLowerCase(Locale.ROOT);
+        if (normalized.equals("solo") || normalized.equals("coop")) {
+            return normalized;
+        }
+        getLogger().warning("modo desconocido '" + raw + "'; se usará 'coop'. Valores válidos: solo, coop.");
+        return "coop";
     }
 
     public boolean reloadLivesConfig() {
@@ -177,6 +189,10 @@ public final class Main extends JavaPlugin {
 
     public boolean isSharedLivesEnabled() {
         return sharedLivesEnabled;
+    }
+
+    public String getDisplayMode() {
+        return displayMode;
     }
 
     public String getNoLivesCommand() {

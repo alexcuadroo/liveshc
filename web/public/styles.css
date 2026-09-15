@@ -138,6 +138,9 @@ h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: i
 .shared-hearts { min-height: 1rem; margin-top: .42rem; color: var(--blood); letter-spacing: .22rem; text-shadow: 0 .12rem 0 var(--blood-dark); }
 .arena.shared-mode { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
 .arena.shared-mode .individual-lives { display: none; }
+.arena.solo-mode { grid-template-columns: minmax(0, 1fr); max-width: 44rem; margin-inline: auto; }
+.arena.solo-mode .fighter-one .fighter-inner { grid-template-columns: minmax(10rem, .9fr) 1.1fr; }
+.arena.solo-mode .skin { width: min(100%, 230px); max-height: 400px; }
 
 .arena { display: grid; grid-template-columns: minmax(0, 1fr) clamp(4rem, 9vw, 7rem) minmax(0, 1fr); align-items: stretch; }
 .fighter { position: relative; min-height: 470px; border: 1px solid var(--line); background: linear-gradient(145deg, rgba(255,255,255,.035), transparent 45%), var(--panel); overflow: hidden; container-type: inline-size; }
@@ -177,6 +180,9 @@ h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: i
 .versus { align-self: center; position: relative; z-index: 2; display: grid; place-content: center; margin: 0 -1rem; width: calc(100% + 2rem); aspect-ratio: 1; transform: rotate(45deg); border: 1px solid var(--blood); background: var(--coal); box-shadow: 0 0 2.5rem rgba(216,58,46,.18); font: italic 800 clamp(2rem, 5vw, 4.5rem)/.55 "Barlow Condensed", sans-serif; }
 .versus span { transform: rotate(-45deg); }
 .versus span:last-child { margin-left: .42em; color: var(--blood); }
+.versus.is-coop { font-style: normal; }
+.versus.is-coop span { color: var(--ink); }
+.versus.is-coop span:last-child { margin-left: 0; }
 .privacy-note { margin: 1.5rem auto 0; max-width: 50rem; color: var(--muted); text-align: center; font-size: .7rem; line-height: 1.6; }
 footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; color: var(--muted); }
 .footer-branding { display: flex; flex-wrap: wrap; align-items: safe center; gap: 1rem; }
@@ -195,6 +201,7 @@ footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; 
   .shared-lives { border-top: 1px solid var(--line); border-left: 0; }
   .arena { grid-template-columns: 1fr; gap: 0; }
   .arena.shared-mode { grid-template-columns: 1fr; gap: 1rem; }
+  .arena.solo-mode { max-width: none; }
   .fighter { min-height: 390px; }
   .fighter-inner { grid-template-columns: minmax(7rem, .7fr) 1.3fr; }
   .versus { width: 4.5rem; margin: -1.25rem auto; aspect-ratio: 1; }

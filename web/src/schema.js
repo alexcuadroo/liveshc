@@ -27,6 +27,7 @@ export const snapshotSchema = z.object({
   serverId: z.string().min(1).max(80),
   capturedAt: z.iso.datetime({ offset: true }),
   resetOnline: z.boolean(),
+  displayMode: z.enum(['solo', 'coop']),
   noLivesCommandExecutions: z.number().int().min(0),
   livesMode: z.enum(['individual', 'shared']),
   sharedLives: z.number().int().min(0).nullable(),
