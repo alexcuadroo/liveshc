@@ -107,7 +107,8 @@ h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: i
   position: relative;
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  justify-content: center;
+  gap: clamp(1.5rem, 5cqi, 3rem);
   min-width: 0;
   padding: 1.2rem clamp(1.15rem, 3cqi, 2rem);
   background: linear-gradient(135deg, rgba(216,58,46,.18), transparent 68%);
@@ -117,8 +118,9 @@ h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: i
 .attempt-copy { position: relative; z-index: 1; min-width: 0; }
 .attempt-label, .attempt-caption { position: relative; display: block; text-transform: uppercase; letter-spacing: .16em; }
 .attempt-label { color: var(--blood); font-size: .68rem; font-weight: 600; }
-.attempt-number { position: relative; display: block; flex: 0 0 auto; margin-inline-start: auto; color: var(--ink); font: italic 800 clamp(4rem, 8cqi, 6.5rem)/.72 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
+.attempt-number { position: relative; display: block; flex: 0 0 auto; margin-inline-start: 0; color: var(--ink); font: italic 800 clamp(4rem, 8cqi, 6.5rem)/.72 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
 .attempt-caption { max-width: 18rem; margin-top: .45rem; color: var(--muted); font-size: .56rem; line-height: 1.55; }
+main[data-display-mode="solo"] .match-status { width: min(44rem, 100%); grid-template-columns: 1fr; }
 
 .shared-lives {
   position: relative;
@@ -138,9 +140,12 @@ h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: i
 .shared-hearts { min-height: 1rem; margin-top: .42rem; color: var(--blood); letter-spacing: .22rem; text-shadow: 0 .12rem 0 var(--blood-dark); }
 .arena.shared-mode { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
 .arena.shared-mode .individual-lives { display: none; }
-.arena.solo-mode { grid-template-columns: minmax(0, 1fr); max-width: 44rem; margin-inline: auto; }
-.arena.solo-mode .fighter-one .fighter-inner { grid-template-columns: minmax(10rem, .9fr) 1.1fr; }
-.arena.solo-mode .skin { width: min(100%, 230px); max-height: 400px; }
+.arena.solo-mode,
+main[data-display-mode="solo"] .arena { grid-template-columns: minmax(0, 1fr); max-width: 44rem; margin-inline: auto; }
+.arena.solo-mode .fighter-one .fighter-inner,
+main[data-display-mode="solo"] .arena .fighter-one .fighter-inner { grid-template-columns: minmax(10rem, .9fr) 1.1fr; }
+.arena.solo-mode .skin,
+main[data-display-mode="solo"] .arena .skin { width: min(100%, 230px); max-height: 400px; }
 
 .arena { display: grid; grid-template-columns: minmax(0, 1fr) clamp(4rem, 9vw, 7rem) minmax(0, 1fr); align-items: stretch; }
 .fighter { position: relative; min-height: 470px; border: 1px solid var(--line); background: linear-gradient(145deg, rgba(255,255,255,.035), transparent 45%), var(--panel); overflow: hidden; container-type: inline-size; }
@@ -202,6 +207,7 @@ footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; 
   .arena { grid-template-columns: 1fr; gap: 0; }
   .arena.shared-mode { grid-template-columns: 1fr; gap: 1rem; }
   .arena.solo-mode { max-width: none; }
+  main[data-display-mode="solo"] .arena { max-width: none; }
   .fighter { min-height: 390px; }
   .fighter-inner { grid-template-columns: minmax(7rem, .7fr) 1.3fr; }
   .versus { width: 4.5rem; margin: -1.25rem auto; aspect-ratio: 1; }

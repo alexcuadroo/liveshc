@@ -115,14 +115,16 @@ const DISPLAY_COPY = {
     title: 'Un jugador.<br /><em>Y... muchos intentos.</em>',
     documentTitle: 'Supervivencia en solitario | LivesHC',
     arenaTitle: 'Jugador destacado',
-    skipLink: 'Saltar al jugador'
+    skipLink: 'Saltar al jugador',
+    attemptCaption: 'veces que el mundo puso a prueba al jugador'
   },
   coop: {
     eyebrow: 'Supervivencia cooperativa',
     title: 'Un equipo.<br /><em>Y... muchos intentos.</em>',
     documentTitle: 'Supervivencia cooperativa | LivesHC',
     arenaTitle: 'Equipo',
-    skipLink: 'Saltar al equipo'
+    skipLink: 'Saltar al equipo',
+    attemptCaption: 'veces que el mundo puso a prueba al equipo'
   }
 };
 
@@ -159,6 +161,7 @@ function renderDisplayMode(server) {
   document.querySelector('#page-title').innerHTML = copy.title;
   document.title = copy.documentTitle;
   document.querySelector('.skip-link').textContent = copy.skipLink;
+  document.querySelector('#attempt-caption').textContent = copy.attemptCaption;
   arenaTitle.textContent = copy.arenaTitle;
   arena.classList.toggle('solo-mode', mode === 'solo');
 
