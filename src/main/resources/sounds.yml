@@ -1,0 +1,72 @@
+sounds:
+  baile-de-whatsapp:
+    key: "hardcoresounds:baile-de-whatsapp"
+    display-name: "<aqua>Baile de WhatsApp"
+    material: "JUKEBOX"
+    volume: 1.0
+    pitch: 1.0
+    source: "MASTER"
+    description: ["<gray>Reproduce Baile de WhatsApp."]
+
+  bombon-asesino:
+    key: "hardcoresounds:bombon-asesino"
+    display-name: "<light_purple>Bombón asesino"
+    material: "TNT"
+    volume: 1.0
+    pitch: 1.0
+    source: "MASTER"
+    description: ["<gray>Reproduce Bombón asesino."]
+
+  creepertroll:
+    key: "hardcoresounds:creepertroll"
+    display-name: "<green>Creeper troll"
+    material: "CREEPER_HEAD"
+    volume: 1.0
+    pitch: 1.0
+    source: "MASTER"
+    description: ["<gray>Reproduce Creeper troll."]
+
+  faah:
+    key: "hardcoresounds:faah"
+    display-name: "<yellow>Faah"
+    material: "GOAT_HORN"
+    volume: 1.0
+    pitch: 1.0
+    source: "MASTER"
+    description: ["<gray>Reproduce Faah."]
+
+  fumando-ando:
+    key: "hardcoresounds:fumando-ando"
+    display-name: "<dark_green>Fumando ando"
+    material: "CAMPFIRE"
+    volume: 1.0
+    pitch: 1.0
+    source: "MASTER"
+    description: ["<gray>Reproduce Fumando ando."]
+
+  la-bebecita-saturado:
+    key: "hardcoresounds:la-bebecita-saturado"
+    display-name: "<red>La bebecita (saturado)"
+    material: "REDSTONE_TORCH"
+    volume: 1.0
+    pitch: 1.0
+    source: "MASTER"
+    description: ["<gray>Reproduce La bebecita saturado."]
+
+  ph-intro-x-see-you-again:
+    key: "hardcoresounds:ph-intro-x-see-you-again"
+    display-name: "<gold>PH Intro x See You Again"
+    material: "MUSIC_DISC_13"
+    volume: 1.0
+    pitch: 1.0
+    source: "MASTER"
+    description: ["<gray>Reproduce PH Intro x See You Again."]
+
+  video-pono-foto-pono:
+    key: "hardcoresounds:video-pono-foto-pono"
+    display-name: "<blue>Video pono foto pono"
+    material: "PAINTING"
+    volume: 1.0
+    pitch: 1.0
+    source: "MASTER"
+    description: ["<gray>Reproduce Video pono foto pono."]

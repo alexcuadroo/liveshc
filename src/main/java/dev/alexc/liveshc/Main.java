@@ -7,6 +7,19 @@ import dev.alexc.liveshc.placeholder.LivesHCExpansion;
 import dev.alexc.liveshc.storage.LivesManager;
 import dev.alexc.liveshc.storage.RecordsManager;
 import dev.alexc.liveshc.web.WebSnapshotService;
+import uy.edualex.hardcoresounds.command.SfxCommand;
+import uy.edualex.hardcoresounds.config.ConfigurationLoader;
+import uy.edualex.hardcoresounds.config.LoadedConfiguration;
+import uy.edualex.hardcoresounds.config.PluginSettings;
+import uy.edualex.hardcoresounds.gui.MenuManager;
+import uy.edualex.hardcoresounds.listener.ConnectionListener;
+import uy.edualex.hardcoresounds.service.ActionService;
+import uy.edualex.hardcoresounds.service.CooldownService;
+import uy.edualex.hardcoresounds.service.ResourcePackService;
+import uy.edualex.hardcoresounds.service.SoundService;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -17,6 +30,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class Main extends JavaPlugin {
     private int initialLives;
@@ -33,10 +48,16 @@ public final class Main extends JavaPlugin {
     private RecordsManager recordsManager;
     private WebSnapshotService webSnapshotService;
     private DeathDuelDisplay deathDuelDisplay;
+    private ConfigurationLoader soundConfigurationLoader;
+    private final AtomicReference<PluginSettings> soundSettings = new AtomicReference<>();
+    private SoundService soundService;
+    private CooldownService cooldownService;
+    private ResourcePackService resourcePackService;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        if (!new File(getDataFolder(), "sounds.yml").exists()) saveResource("sounds.yml", false);
         loadSettings();
 
         livesManager = new LivesManager(this);
@@ -46,6 +67,10 @@ public final class Main extends JavaPlugin {
         recordsManager = new RecordsManager(this);
         recordsManager.load();
         deathDuelDisplay = new DeathDuelDisplay(this);
+        if (!enableSounds()) {
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
         getServer().getPluginManager().registerEvents(new PlayerLivesListener(this), this);
         if (!registerCommand()) {
@@ -69,6 +94,50 @@ public final class Main extends JavaPlugin {
         if (recordsManager != null) {
             recordsManager.save();
         }
+    }
+
+    private boolean enableSounds() {
+        soundConfigurationLoader = new ConfigurationLoader(this);
+        try {
+            LoadedConfiguration loaded = soundConfigurationLoader.load();
+            soundSettings.set(loaded.settings());
+            soundService = new SoundService();
+            soundService.replaceCatalog(loaded.sounds());
+            cooldownService = new CooldownService();
+            resourcePackService = new ResourcePackService(getLogger(), loaded.settings());
+            ActionService actions = new ActionService(soundService, cooldownService, soundSettings::get);
+            MenuManager menus = new MenuManager(this, soundService, actions, cooldownService, resourcePackService);
+            getServer().getPluginManager().registerEvents(menus, this);
+            getServer().getPluginManager().registerEvents(new ConnectionListener(resourcePackService), this);
+            SfxCommand command = new SfxCommand(soundService, actions, menus,
+                    () -> soundSettings.get().guiEnabled(), this::reloadSounds);
+            getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
+                    event.registrar().register(command.build().build(), "Controla sonidos personalizados", List.of("hardcoresounds")));
+            getLogger().info("Sistema de sonidos integrado: " + loaded.sounds().size() + " sonidos.");
+            return true;
+        } catch (Exception exception) {
+            getLogger().severe("No se pudo cargar la configuración de sonidos: " + exception.getMessage());
+            return false;
+        }
+    }
+
+    public void reloadSounds(org.bukkit.command.CommandSender sender) {
+        try {
+            LoadedConfiguration candidate = reloadSoundSettings();
+            sender.sendMessage(Component.text("Sonidos recargados: " + candidate.sounds().size() + ".", NamedTextColor.GREEN));
+        } catch (IOException | InvalidConfigurationException | IllegalArgumentException exception) {
+            sender.sendMessage(Component.text("La recarga falló; se conservó la configuración anterior: " + exception.getMessage(), NamedTextColor.RED));
+            getLogger().warning("Sound reload failed; previous configuration preserved: " + exception.getMessage());
+        }
+    }
+
+    private LoadedConfiguration reloadSoundSettings() throws IOException, InvalidConfigurationException {
+        LoadedConfiguration candidate = soundConfigurationLoader.load();
+        soundSettings.set(candidate.settings());
+        soundService.replaceCatalog(candidate.sounds());
+        resourcePackService.replaceSettings(candidate.settings());
+        cooldownService.clear();
+        return candidate;
     }
 
     private boolean registerCommand() {
@@ -164,6 +233,7 @@ public final class Main extends JavaPlugin {
             if (webSnapshotService != null) {
                 webSnapshotService.reload();
             }
+            reloadSoundSettings();
             return true;
         } catch (IOException | InvalidConfigurationException | RuntimeException exception) {
             getLogger().severe("No se pudo recargar config.yml: " + exception.getMessage());
