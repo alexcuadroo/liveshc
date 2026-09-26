@@ -1,4 +1,10 @@
 .gradle/
 .github/modernize/
 build/
+bin/
 .vscode/settings.json
+*.class
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
