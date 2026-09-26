@@ -50,9 +50,20 @@ function formatLastSignal(player) {
   return new Intl.DateTimeFormat('es', options).format(seenAt);
 }
 
+const DIMENSION_LABELS = {
+  overworld: 'Mundo',
+  world_nether: 'Infierno',
+  nether: 'Infierno',
+  the_nether: 'Infierno',
+  world_the_end: '¿El Fin?',
+  the_end: '¿El Fin?',
+  end: '¿El Fin?'
+};
+
 function formatLocation(location) {
   if (!location) return { dimension: 'Sin registrar', coordinates: '—' };
-  const dimension = location.world?.split(':').at(-1)?.replaceAll('_', ' ') || location.dimension;
+  const raw = (location.world?.split(':').at(-1) || location.dimension || '').trim();
+  const dimension = DIMENSION_LABELS[raw.toLowerCase()] ?? (raw ? raw.replaceAll('_', ' ') : 'Sin registrar');
   return { dimension, coordinates: `${Math.round(location.x)} / ${Math.round(location.y)} / ${Math.round(location.z)}` };
 }
 
