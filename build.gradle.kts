@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.alexc.liveshc"
-version = "1.3.0"
+version = "1.3.1"
 val pluginVersion = version.toString()
 
 repositories {

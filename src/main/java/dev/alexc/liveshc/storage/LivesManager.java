@@ -159,6 +159,15 @@ public final class LivesManager {
         return new AddResult(previous, current, shared);
     }
 
+    public RemoveResult removeLives(UUID playerId, int amount) {
+        boolean shared = plugin.isSharedLivesEnabled();
+        int previous = shared ? ensureSharedLives() : ensureIndividualPlayer(playerId);
+        int current = (int) Math.max(0L, (long) previous - amount);
+        setLives(playerId, current, shared);
+        save();
+        return new RemoveResult(previous, current, shared);
+    }
+
     public int resetLives(UUID playerId) {
         return resetLives(playerId, plugin.isSharedLivesEnabled());
     }
@@ -230,6 +239,16 @@ public final class LivesManager {
     public record AddResult(int previous, int current, boolean shared) {
         public int added() {
             return current - previous;
+        }
+    }
+
+    public record RemoveResult(int previous, int current, boolean shared) {
+        public int removed() {
+            return previous - current;
+        }
+
+        public boolean reachedZero() {
+            return previous > 0 && current == 0;
         }
     }
 }

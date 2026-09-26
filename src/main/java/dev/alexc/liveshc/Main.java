@@ -241,6 +241,43 @@ public final class Main extends JavaPlugin {
         }
     }
 
+    /** Ejecuta la acción configurada cuando un jugador (o el contador compartido) se queda sin vidas. */
+    public void handleLivesDepleted(UUID playerId, String playerName, boolean shared) {
+        String command = noLivesCommand == null ? "" : noLivesCommand.trim();
+        if (command.startsWith("/")) {
+            command = command.substring(1).trim();
+        }
+        if (command.isEmpty()) {
+            getLogger().severe("comando-sin-vidas está vacío; no se ejecutó ninguna acción para "
+                    + playerName + ".");
+            return;
+        }
+
+        String parsedCommand = command.replace("%player%", playerName);
+        long delayTicks = noLivesCommandDelaySeconds * 20L;
+        if (delayTicks == 0L) {
+            executeNoLivesCommand(playerId, parsedCommand, shared);
+            return;
+        }
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            if (livesManager.getLives(playerId, shared) == 0) {
+                executeNoLivesCommand(playerId, parsedCommand, shared);
+            }
+        }, delayTicks);
+    }
+
+    private void executeNoLivesCommand(UUID playerId, String parsedCommand, boolean shared) {
+        boolean dispatched = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
+        if (dispatched) {
+            recordsManager.recordNoLivesCommandExecution();
+            livesManager.resetLives(playerId, shared);
+            webSnapshotService.publishAll(false);
+        } else {
+            getLogger().warning("El comando sin vidas no fue reconocido: " + parsedCommand);
+        }
+    }
+
     public int getLives(UUID playerId) {
         return livesManager.getLives(playerId);
     }

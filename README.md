@@ -10,7 +10,7 @@ Plugin para Paper que reúne vidas, muertes, HUD, comandos administrativos, soni
 
 ## Instalación y actualización
 
-1. Descarga o compila `build/libs/liveshc-1.3.0.jar` y colócalo en `plugins/`.
+1. Descarga o compila `build/libs/liveshc-1.3.1.jar` y colócalo en `plugins/`.
 2. Si usabas HardcoreSounds por separado, apaga el servidor y retira su JAR para evitar tener dos plugins gestionando `/sfx` y el resource pack.
 3. Inicia el servidor. LivesHC crea su carpeta y archivos de configuración al arrancar y al guardar datos.
 4. Configura `plugins/LivesHC/config.yml` y `plugins/LivesHC/sounds.yml`; reinicia o usa `/liveshc reload`.
@@ -59,6 +59,8 @@ hud-muerte:
 | --- | --- | --- |
 | `/liveshc reload` | Recarga la configuración, datos de récords y ajustes/catálogo de sonidos. | `liveshc.reload` |
 | `/liveshc add <jugador> <cantidad>` | Añade vidas a un jugador conectado; en modo compartido modifica el contador común. | `liveshc.add` |
+| `/liveshc remove <jugador> <cantidad>` | Quita vidas a un jugador conectado (alias `/liveshc quitar`); si llega a 0 ejecuta la acción de cero vidas. | `liveshc.remove` |
+| `/liveshc get <jugador>` | Muestra las vidas de un jugador (conectado o conocido; alias `/liveshc vidas` o `check`). | `liveshc.get` |
 | `/sfx` | Abre el menú de sonidos si `general.gui-enabled` está activo. | `hardcoresounds.use` |
 | `/sfx list` | Lista los IDs de sonidos cargados. | `hardcoresounds.use` |
 | `/sfx play <sonido> [jugador|@a]` | Reproduce un sonido para ti o para el destino indicado. | `hardcoresounds.play`, `.others` o `.all` según destino |
@@ -109,4 +111,4 @@ En Linux/macOS:
 ./gradlew test build
 ```
 
-El JAR queda en `build/libs/liveshc-1.3.0.jar`. Actualmente el proyecto no contiene pruebas automatizadas (`test NO-SOURCE`); compilar correctamente no sustituye una prueba en un servidor Paper.
+El JAR queda en `build/libs/liveshc-1.3.1.jar`. Actualmente el proyecto no contiene pruebas automatizadas (`test NO-SOURCE`); compilar correctamente no sustituye una prueba en un servidor Paper.

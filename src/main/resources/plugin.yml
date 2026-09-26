@@ -9,7 +9,7 @@ softdepend: [PlaceholderAPI]
 commands:
   liveshc:
     description: Comandos administrativos de LivesHC.
-    usage: /liveshc reload o /liveshc add <jugador> <cantidad>
+    usage: /liveshc reload | /liveshc add|remove <jugador> <cantidad> | /liveshc get <jugador>
 
 permissions:
   liveshc.reload:
@@ -17,6 +17,12 @@ permissions:
     default: op
   liveshc.add:
     description: Permite añadir vidas a un jugador conectado.
+    default: op
+  liveshc.remove:
+    description: Permite quitar vidas a un jugador conectado.
+    default: op
+  liveshc.get:
+    description: Permite consultar las vidas de un jugador.
     default: op
   hardcoresounds.use:
     description: Permite usar los comandos de sonidos.
