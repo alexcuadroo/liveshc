@@ -140,12 +140,39 @@ main[data-display-mode="solo"] .match-status { width: min(44rem, 100%); grid-tem
 .shared-hearts { min-height: 1rem; margin-top: .42rem; color: var(--blood); letter-spacing: .22rem; text-shadow: 0 .12rem 0 var(--blood-dark); }
 .arena.shared-mode { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
 .arena.shared-mode .individual-lives { display: none; }
-.arena.solo-mode,
-main[data-display-mode="solo"] .arena { grid-template-columns: minmax(0, 1fr); max-width: 44rem; margin-inline: auto; }
-.arena.solo-mode .fighter-one .fighter-inner,
-main[data-display-mode="solo"] .arena .fighter-one .fighter-inner { grid-template-columns: minmax(10rem, .9fr) 1.1fr; }
-.arena.solo-mode .skin,
-main[data-display-mode="solo"] .arena .skin { width: min(100%, 230px); max-height: 400px; }
+.arena.solo-mode { grid-template-columns: minmax(0, 1fr); max-width: 44rem; margin-inline: auto; }
+.arena.solo-mode .fighter-one .fighter-inner { grid-template-columns: minmax(10rem, .9fr) 1.1fr; }
+.arena.solo-mode .skin { width: min(100%, 230px); max-height: 400px; }
+
+/* Muchos jugadores en modo solo: rejilla adaptativa de fichas compactas. */
+.arena.grid-mode {
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1rem;
+  max-width: none;
+  margin-inline: 0;
+  align-items: stretch;
+}
+.arena.grid-mode .fighter { min-height: 0; }
+.arena.grid-mode .fighter::before { left: auto; right: -.05em; }
+main .arena.grid-mode .fighter-inner,
+main .arena.grid-mode .fighter-inner > * { direction: ltr; }
+.arena.grid-mode .fighter-inner {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: .85rem;
+  padding: 1.1rem;
+}
+.arena.grid-mode .skin-wrap { min-height: 0; height: clamp(8rem, 50cqw, 12rem); }
+.arena.grid-mode .skin { width: auto; height: 100%; max-width: 100%; max-height: none; }
+.arena.grid-mode .status { margin-bottom: .5rem; }
+.arena.grid-mode .player-name { margin-bottom: .85rem; font-size: clamp(1.6rem, 7cqw, 2.2rem); }
+.arena.grid-mode .hearts { min-height: 1.6rem; margin: .25rem 0 1rem; font-size: clamp(1.15rem, 5cqw, 1.5rem); }
+.arena.grid-mode .meta { gap: .7rem; }
+.arena.grid-mode .survival { margin-top: 1rem; }
+
+@media (max-width: 480px) {
+  .arena.grid-mode { grid-template-columns: 1fr; }
+}
 
 .arena { display: grid; grid-template-columns: minmax(0, 1fr) clamp(4rem, 9vw, 7rem) minmax(0, 1fr); align-items: stretch; }
 .fighter { position: relative; min-height: 470px; border: 1px solid var(--line); background: linear-gradient(145deg, rgba(255,255,255,.035), transparent 45%), var(--panel); overflow: hidden; container-type: inline-size; }
@@ -207,7 +234,6 @@ footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; 
   .arena { grid-template-columns: 1fr; gap: 0; }
   .arena.shared-mode { grid-template-columns: 1fr; gap: 1rem; }
   .arena.solo-mode { max-width: none; }
-  main[data-display-mode="solo"] .arena { max-width: none; }
   .fighter { min-height: 390px; }
   .fighter-inner { grid-template-columns: minmax(7rem, .7fr) 1.3fr; }
   .versus { width: 4.5rem; margin: -1.25rem auto; aspect-ratio: 1; }

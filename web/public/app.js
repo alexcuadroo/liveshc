@@ -56,17 +56,19 @@ function formatLocation(location) {
   return { dimension, coordinates: `${Math.round(location.x)} / ${Math.round(location.y)} / ${Math.round(location.z)}` };
 }
 
-function renderPlayer(player, index) {
+function hearts(value) {
+  if (value === null || value === undefined) return { text: 'Sin datos', empty: true, label: 'Vidas desconocidas' };
+  if (value === 0) return { text: 'Sin vidas', empty: true, label: 'Sin vidas' };
+  const text = '♥'.repeat(Math.min(value, 20)) + (value > 20 ? ` +${value - 20}` : '');
+  return { text, empty: false, label: `${value} vidas restantes` };
+}
+
+function playerMarkup(player, index) {
   const location = formatLocation(player.location);
   const name = player.name || `Jugador ${index + 1}`;
-  const lives = player.lives;
-  const hearts = lives === null ? 'Sin datos' : lives === 0 ? 'Sin vidas' : '♥'.repeat(Math.min(lives, 20)) + (lives > 20 ? ` +${lives - 20}` : '');
+  const lives = hearts(player.lives);
   const skinUrl = state.skinTemplate.replace('{uuid}', encodeURIComponent(player.uuid));
-  const article = document.querySelector(`#player-${index}`);
-  article.classList.remove('skeleton');
-  article.dataset.number = String(index + 1).padStart(2, '0');
-  article.setAttribute('aria-busy', 'false');
-  article.innerHTML = `
+  return `
     <div class="fighter-inner">
       <div class="skin-wrap"><img class="skin" src="${escapeHtml(skinUrl)}" alt="Skin de ${escapeHtml(name)}" width="180" height="360"></div>
       <div class="stats">
@@ -74,7 +76,7 @@ function renderPlayer(player, index) {
         <h3 class="player-name">${escapeHtml(name)}</h3>
         <div class="individual-lives">
           <div class="lives-label">Vidas restantes</div>
-          <div class="hearts ${!lives ? 'empty' : ''}" aria-label="${lives ?? 'Vidas desconocidas'}">${hearts}</div>
+          <div class="hearts ${lives.empty ? 'empty' : ''}" aria-label="${escapeHtml(lives.label)}">${lives.text}</div>
         </div>
         <dl class="meta">
           <div><dt>Tiempo jugado</dt><dd>${formatDuration(player.playTimeSeconds)}</dd></div>
@@ -90,15 +92,71 @@ function renderPlayer(player, index) {
         </section>
       </div>
     </div>`;
-  article.querySelector('img').addEventListener('error', event => { event.currentTarget.src = fallbackSkin; }, { once: true });
+}
+
+function placeholderMarkup() {
+  return `
+    <div class="fighter-inner">
+      <div class="skin-wrap"><img class="skin" src="${fallbackSkin}" alt="Sin jugador todavía" width="180" height="360"></div>
+      <div class="stats">
+        <div class="status">Esperando</div>
+        <h3 class="player-name">Sin jugador todavía</h3>
+        <div class="individual-lives">
+          <div class="lives-label">Vidas restantes</div>
+          <div class="hearts empty">El plugin aún no envió datos</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function skeletonMarkup() {
+  return '<div class="fighter-inner"><div class="skin-wrap"></div><div><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>';
+}
+
+function createFighter(player, index, { skeleton = false } = {}) {
+  const article = document.createElement('article');
+  article.className = `fighter ${index === 0 ? 'fighter-one' : index === 1 ? 'fighter-two' : ''}`.trim();
+  article.id = `player-${index}`;
+  article.dataset.number = String(index + 1).padStart(2, '0');
+  article.setAttribute('aria-busy', 'false');
+  article.classList.toggle('skeleton', skeleton);
+  article.innerHTML = skeleton ? skeletonMarkup() : player ? playerMarkup(player, index) : placeholderMarkup();
+  const image = article.querySelector('img');
+  if (image && !skeleton) {
+    image.addEventListener('error', event => { event.currentTarget.src = fallbackSkin; }, { once: true });
+  }
+  return article;
+}
+
+function createVersus() {
+  const versus = document.createElement('div');
+  versus.className = 'versus is-coop';
+  versus.id = 'versus-badge';
+  versus.setAttribute('aria-hidden', 'true');
+  versus.innerHTML = '<span>+</span>';
+  return versus;
+}
+
+function renderArena(roster, mode, shared) {
+  const arena = document.querySelector('#arena');
+  const solo = mode === 'solo';
+  const many = solo && roster.length > 1;
+  const showVersus = !solo && !shared && roster.length >= 2;
+
+  arena.classList.toggle('solo-mode', solo && !many);
+  arena.classList.toggle('grid-mode', many);
+  arena.classList.toggle('shared-mode', !solo && shared);
+  arena.replaceChildren();
+  roster.forEach((player, index) => {
+    arena.append(createFighter(player, index));
+    if (showVersus && index === 0) arena.append(createVersus());
+  });
 }
 
 function renderLivesMode(server) {
   const shared = server?.livesMode === 'shared';
   const panel = document.querySelector('#shared-lives');
-  const arena = document.querySelector('.arena');
   panel.hidden = !shared;
-  arena.classList.toggle('shared-mode', shared);
   if (!shared) return;
 
   const lives = server.sharedLives;
@@ -118,6 +176,14 @@ const DISPLAY_COPY = {
     skipLink: 'Saltar al jugador',
     attemptCaption: 'veces que el mundo puso a prueba al jugador'
   },
+  soloMany: {
+    eyebrow: 'Supervivencia individual',
+    title: 'Cada jugador.<br /><em>Y... muchos intentos.</em>',
+    documentTitle: 'Supervivencia individual | LivesHC',
+    arenaTitle: 'Jugadores',
+    skipLink: 'Saltar a los jugadores',
+    attemptCaption: 'veces que el mundo puso a prueba a cada jugador'
+  },
   coop: {
     eyebrow: 'Supervivencia cooperativa',
     title: 'Un equipo.<br /><em>Y... muchos intentos.</em>',
@@ -128,52 +194,20 @@ const DISPLAY_COPY = {
   }
 };
 
-function renderPlaceholder(index) {
-  const article = document.querySelector(`#player-${index}`);
-  article.classList.remove('skeleton');
-  article.dataset.number = String(index + 1).padStart(2, '0');
-  article.setAttribute('aria-busy', 'false');
-  article.innerHTML = `
-    <div class="fighter-inner">
-      <div class="skin-wrap"><img class="skin" src="${fallbackSkin}" alt="Sin jugador todavía" width="180" height="360"></div>
-      <div class="stats">
-        <div class="status">Esperando</div>
-        <h3 class="player-name">Sin jugador todavía</h3>
-        <div class="individual-lives">
-          <div class="lives-label">Vidas restantes</div>
-          <div class="hearts empty">El plugin aún no envió datos</div>
-        </div>
-      </div>
-    </div>`;
+function copyFor(mode, count) {
+  if (mode === 'solo' && count > 1) return DISPLAY_COPY.soloMany;
+  return DISPLAY_COPY[mode] ?? DISPLAY_COPY.coop;
 }
 
-function renderDisplayMode(server) {
-  const mode = server?.displayMode ?? 'coop';
-  const copy = DISPLAY_COPY[mode];
-  const main = document.querySelector('#duelo');
-  const arena = document.querySelector('.arena');
-  const versus = document.querySelector('#versus-badge');
-  const second = document.querySelector('#player-1');
-  const arenaTitle = document.querySelector('#arena-title');
-
-  main.dataset.displayMode = mode;
+function renderDisplayMode(mode, count) {
+  const copy = copyFor(mode, count);
+  document.querySelector('#duelo').dataset.displayMode = mode;
   document.querySelector('#mode-eyebrow').textContent = copy.eyebrow;
   document.querySelector('#page-title').innerHTML = copy.title;
   document.title = copy.documentTitle;
   document.querySelector('.skip-link').textContent = copy.skipLink;
   document.querySelector('#attempt-caption').textContent = copy.attemptCaption;
-  arenaTitle.textContent = copy.arenaTitle;
-  arena.classList.toggle('solo-mode', mode === 'solo');
-
-  if (mode === 'solo') {
-    versus.hidden = true;
-    second.hidden = true;
-  } else {
-    second.hidden = false;
-    versus.hidden = false;
-    versus.innerHTML = '<span>+</span>';
-    versus.classList.add('is-coop');
-  }
+  document.querySelector('#arena-title').textContent = copy.arenaTitle;
 }
 
 function renderAttemptRecord(server) {
@@ -189,15 +223,20 @@ async function refresh() {
     const response = await fetch('/api/v1/versus', { headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    renderAttemptRecord(data.server);
-    renderDisplayMode(data.server);
-    renderLivesMode(data.server);
-    const mode = data.server?.displayMode ?? 'coop';
-    const expected = mode === 'solo' ? 1 : 2;
-    for (let index = 0; index < expected; index += 1) {
-      if (data.players[index]) renderPlayer(data.players[index], index);
-      else renderPlaceholder(index);
-    }
+    const server = data.server;
+    const mode = server?.displayMode ?? 'coop';
+    const shared = server?.livesMode === 'shared';
+    const players = Array.isArray(data.players) ? data.players : [];
+
+    renderAttemptRecord(server);
+    renderLivesMode(server);
+    renderDisplayMode(mode, players.length);
+
+    const roster = mode === 'solo'
+      ? (players.length ? players : [null])
+      : [players[0] ?? null, players[1] ?? null];
+    renderArena(roster, mode, shared);
+
     state.hasData = true;
     document.querySelector('#last-update').textContent = `Actualizado ${new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}`;
     document.querySelector('#announcer').textContent = 'Estadísticas actualizadas';
@@ -211,11 +250,11 @@ function schedule() {
   if (!document.hidden) state.timer = setInterval(refresh, POLL_INTERVAL);
 }
 
-document.querySelectorAll('.fighter').forEach((element, index) => {
-  element.classList.add('skeleton');
-  element.innerHTML = `<div class="fighter-inner"><div class="skin-wrap"></div><div><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>`;
-  element.dataset.number = String(index + 1).padStart(2, '0');
-});
+document.querySelector('#arena').replaceChildren(
+  createFighter(null, 0, { skeleton: true }),
+  createVersus(),
+  createFighter(null, 1, { skeleton: true })
+);
 
 fetch('/api/v1/config').then(response => response.ok ? response.json() : null).then(config => {
   if (config?.skinUrlTemplate?.includes('{uuid}')) state.skinTemplate = config.skinUrlTemplate;

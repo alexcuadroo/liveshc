@@ -10,7 +10,8 @@ const config = {
   INGEST_TOKEN: 'this-is-a-long-test-token-1234',
   SERVER_ID: 'principal',
   SKIN_URL_TEMPLATE: 'https://example.com/{uuid}.png',
-  TRUST_PROXY: 1
+  TRUST_PROXY: 1,
+  MAX_PLAYERS: 30
 };
 
 function poolWith({ serverRow, playerRows = [] }) {
@@ -115,15 +116,19 @@ test('accepts a valid authenticated snapshot', async () => {
   assert.equal(serverUpsert.params[4], 'coop');
 });
 
-test('solo returns one auto-selected player', async () => {
-  const pool = poolWith({ serverRow: serverRow({ display_mode: 'solo' }), playerRows: [playerRow()] });
+test('solo returns every tracked player up to the configured limit', async () => {
+  const pool = poolWith({
+    serverRow: serverRow({ display_mode: 'solo' }),
+    playerRows: [playerRow(), playerRow({ uuid: PLAYER_2, name: 'Sam', online: false })]
+  });
   const response = await request(createApp({ pool, config })).get('/api/v1/versus');
   assert.equal(response.status, 200);
   assert.equal(response.body.server.displayMode, 'solo');
-  assert.equal(response.body.players.length, 1);
+  assert.equal(response.body.players.length, 2);
   assert.equal(response.body.players[0].uuid, PLAYER_1);
+  assert.equal(response.body.players[1].uuid, PLAYER_2);
   const playersQuery = pool.queries.find(item => item.sql.includes('FROM player_snapshots'));
-  assert.equal(playersQuery.params[1], 1);
+  assert.equal(playersQuery.params[1], config.MAX_PLAYERS);
 });
 
 test('coop returns two auto-selected players ordered by online', async () => {
