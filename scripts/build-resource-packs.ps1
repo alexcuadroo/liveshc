@@ -1,6 +1,34 @@
 param([switch]$AllowMissingSounds)
 
 $ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.IO.Compression
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+# Minecraft reads ZIP entries with Java's ZipFile, which does not translate
+# backslashes. Compress-Archive writes Windows-style separators, so entries
+# become unreachable and resource namespaces are never detected. Build the ZIP
+# manually to guarantee forward slashes.
+function Write-ZipForwardSlash {
+    param(
+        [Parameter(Mandatory)][string]$SourceDirectory,
+        [Parameter(Mandatory)][string]$DestinationPath
+    )
+    $archive = [System.IO.Compression.ZipFile]::Open($DestinationPath, [System.IO.Compression.ZipArchiveMode]::Create)
+    try {
+        foreach ($directory in Get-ChildItem -LiteralPath $SourceDirectory -Recurse -Directory) {
+            $entryName = $directory.FullName.Substring($SourceDirectory.Length + 1).Replace('\', '/') + '/'
+            $archive.CreateEntry($entryName) | Out-Null
+        }
+        foreach ($file in Get-ChildItem -LiteralPath $SourceDirectory -Recurse -File) {
+            $entryName = $file.FullName.Substring($SourceDirectory.Length + 1).Replace('\', '/')
+            [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                $archive, $file.FullName, $entryName, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+        }
+    } finally {
+        $archive.Dispose()
+    }
+}
+
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $sourceRoot = Join-Path $projectRoot 'resource-pack/source'
 $outputRoot = Join-Path $projectRoot 'build/resource-packs'
@@ -45,7 +73,7 @@ foreach ($profile in @('26.1', '26.2', '26.3')) {
     Copy-Item -Recurse -LiteralPath (Join-Path $sourceRoot 'assets') -Destination $stage
     Get-ChildItem -LiteralPath $stage -Recurse -Filter '.gitkeep' | Remove-Item -Force
     Copy-Item -LiteralPath $metadataPath -Destination (Join-Path $stage 'pack.mcmeta')
-    Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip -CompressionLevel Optimal
+    Write-ZipForwardSlash -SourceDirectory $stage -DestinationPath $zip
     Remove-Item -Recurse -Force -LiteralPath $stage
     $hash = (Get-FileHash -Algorithm SHA1 -LiteralPath $zip).Hash.ToLowerInvariant()
     Write-Output "$zip  SHA-1: $hash"
