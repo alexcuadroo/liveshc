@@ -3,7 +3,6 @@ import { z } from 'zod';
 export function loadConfig(env = process.env) {
   return z.object({
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-    HOST: z.string().min(1).default('0.0.0.0'),
     DATABASE_URL: z.string().min(1),
     INGEST_TOKEN: z.string().min(24),
     SERVER_ID: z.string().min(1).max(80).default('principal'),

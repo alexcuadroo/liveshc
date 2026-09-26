@@ -4,8 +4,8 @@ import { loadConfig } from './config.js';
 
 const config = loadConfig();
 const pool = new pg.Pool({ connectionString: config.DATABASE_URL, max: 10 });
-const server = createApp({ pool, config }).listen(config.PORT, config.HOST, () => {
-  console.log(`LivesHC web escuchando en http://${config.HOST}:${config.PORT}`);
+const server = createApp({ pool, config }).listen(config.PORT, () => {
+  console.log(`LivesHC web escuchando en :${config.PORT}`);
 });
 
 async function shutdown() {

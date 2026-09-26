@@ -51,7 +51,7 @@ function formatLastSignal(player) {
 }
 
 const DIMENSION_LABELS = {
-  overworld: 'Mundo',
+  overworld: 'Mundo Exterior',
   world_nether: 'Infierno',
   nether: 'Infierno',
   the_nether: 'Infierno',
