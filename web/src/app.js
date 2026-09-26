@@ -70,8 +70,18 @@ export function createApp({ pool, config }) {
     response.json({ skinUrlTemplate: config.SKIN_URL_TEMPLATE });
   });
 
-  app.use(express.static(publicDir, { maxAge: '1h', etag: true }));
-  app.get('/{*path}', (_request, response) => response.sendFile(path.join(publicDir, 'index.html')));
+  app.use(express.static(publicDir, {
+    etag: true,
+    setHeaders(response, filePath) {
+      // Los assets se revalidan con ETag para que un despliegue no quede servido
+      // desde cachés intermedias (Cloudflare) con una versión anterior.
+      response.setHeader('Cache-Control', /\.(?:html|js|css)$/i.test(filePath) ? 'no-cache' : 'public, max-age=86400');
+    }
+  }));
+  app.get('/{*path}', (_request, response) => {
+    response.setHeader('Cache-Control', 'no-cache');
+    response.sendFile(path.join(publicDir, 'index.html'));
+  });
   app.use((error, _request, response, _next) => {
     console.error(error);
     response.status(500).json({ error: 'internal_error' });

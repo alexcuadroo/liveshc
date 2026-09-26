@@ -153,6 +153,17 @@ test('returns empty players before the first snapshot', async () => {
   assert.deepEqual(response.body.players, []);
 });
 
+test('serves front-end assets with revalidation headers', async () => {
+  const pool = poolWith({ serverRow: null });
+  const list = await request(createApp({ pool, config })).get('/app.js');
+  assert.equal(list.status, 200);
+  assert.equal(list.headers['cache-control'], 'no-cache');
+
+  const page = await request(createApp({ pool, config })).get('/');
+  assert.equal(page.status, 200);
+  assert.equal(page.headers['cache-control'], 'no-cache');
+});
+
 test('health reports unavailable when PostgreSQL fails', async () => {
   const pool = { query: async () => { throw new Error('offline'); } };
   const response = await request(createApp({ pool, config })).get('/health');
