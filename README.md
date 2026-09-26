@@ -10,7 +10,7 @@ Plugin para Paper que reúne vidas, muertes, HUD, comandos administrativos, soni
 
 ## Instalación y actualización
 
-1. Descarga o compila `build/libs/liveshc-1.3.1.jar` y colócalo en `plugins/`.
+1. Descarga o compila `build/libs/liveshc-1.3.2.jar` y colócalo en `plugins/`.
 2. Si usabas HardcoreSounds por separado, apaga el servidor y retira su JAR para evitar tener dos plugins gestionando `/sfx` y el resource pack.
 3. Inicia el servidor. LivesHC crea su carpeta y archivos de configuración al arrancar y al guardar datos.
 4. Configura `plugins/LivesHC/config.yml` y `plugins/LivesHC/sounds.yml`; reinicia o usa `/liveshc reload`.
@@ -111,4 +111,4 @@ En Linux/macOS:
 ./gradlew test build
 ```
 
-El JAR queda en `build/libs/liveshc-1.3.1.jar`. Actualmente el proyecto no contiene pruebas automatizadas (`test NO-SOURCE`); compilar correctamente no sustituye una prueba en un servidor Paper.
+El JAR queda en `build/libs/liveshc-1.3.2.jar`. Actualmente el proyecto no contiene pruebas automatizadas (`test NO-SOURCE`); compilar correctamente no sustituye una prueba en un servidor Paper.

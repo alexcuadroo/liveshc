@@ -5,6 +5,7 @@ const player = z.object({
   uuid: z.string().uuid(),
   name: z.string().min(1).max(32).nullable(),
   individualLives: z.number().int().min(0),
+  deaths: z.number().int().min(0).default(0),
   playTimeSeconds: z.number().int().min(0).nullable(),
   online: z.boolean(),
   world: z.string().min(1).max(160).nullable(),

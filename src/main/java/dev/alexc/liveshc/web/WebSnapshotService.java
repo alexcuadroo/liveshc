@@ -96,7 +96,8 @@ public final class WebSnapshotService {
         Map<UUID, PlayerState> states = new LinkedHashMap<>();
         for (Map.Entry<UUID, Integer> entry : plugin.getLivesManager().getKnownIndividualLives().entrySet()) {
             OfflinePlayer offline = Bukkit.getOfflinePlayer(entry.getKey());
-            states.put(entry.getKey(), PlayerState.offline(entry.getKey(), offline.getName(), entry.getValue()));
+            states.put(entry.getKey(), PlayerState.offline(entry.getKey(), offline.getName(), entry.getValue(),
+                    plugin.getLivesManager().getDeaths(entry.getKey())));
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
             states.put(player.getUniqueId(), capturePlayer(player, !shuttingDown, capturedAt));
@@ -108,6 +109,7 @@ public final class WebSnapshotService {
         Location location = player.getLocation();
         return new PlayerState(player.getUniqueId(), player.getName(),
                 plugin.getLivesManager().getLives(player.getUniqueId(), false),
+                plugin.getLivesManager().getDeaths(player.getUniqueId()),
                 Math.max(0L, player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20L), online,
                 location.getWorld().getKey().toString(), location.getWorld().getEnvironment().name(),
                 location.getX(), location.getY(), location.getZ(), capturedAt,
@@ -186,12 +188,12 @@ public final class WebSnapshotService {
         return escaped.append('"').toString();
     }
 
-    private record PlayerState(UUID uuid, String name, int individualLives, Long playTimeSeconds,
+    private record PlayerState(UUID uuid, String name, int individualLives, int deaths, Long playTimeSeconds,
                                boolean online, String world, String dimension, Double x, Double y, Double z,
                                Instant lastSeenAt, Integer level, Long totalExperience, Long walkedCentimeters,
                                Long blocksMined, Long mobKills) {
-        static PlayerState offline(UUID uuid, String name, int lives) {
-            return new PlayerState(uuid, name, lives, null, false, null, null, null, null, null,
+        static PlayerState offline(UUID uuid, String name, int lives, int deaths) {
+            return new PlayerState(uuid, name, lives, deaths, null, false, null, null, null, null, null,
                     null, null, null, null, null, null);
         }
 
@@ -199,6 +201,7 @@ public final class WebSnapshotService {
             json.append('{').append("\"uuid\":").append(quote(uuid.toString()))
                     .append(",\"name\":").append(quote(name))
                     .append(",\"individualLives\":").append(individualLives)
+                    .append(",\"deaths\":").append(deaths)
                     .append(",\"playTimeSeconds\":").append(playTimeSeconds == null ? "null" : playTimeSeconds)
                     .append(",\"online\":").append(online)
                     .append(",\"world\":").append(quote(world))

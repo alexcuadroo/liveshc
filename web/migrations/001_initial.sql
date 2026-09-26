@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS player_snapshots (
     uuid uuid NOT NULL,
     name text,
     individual_lives integer NOT NULL CHECK (individual_lives >= 0),
+    deaths integer NOT NULL DEFAULT 0 CHECK (deaths >= 0),
     play_time_seconds bigint CHECK (play_time_seconds IS NULL OR play_time_seconds >= 0),
     online boolean NOT NULL DEFAULT false,
     world text,

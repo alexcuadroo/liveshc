@@ -20,13 +20,14 @@ export async function saveSnapshot(pool, snapshot) {
     for (const player of snapshot.players) {
       await client.query(`
         INSERT INTO player_snapshots
-          (server_id, uuid, name, individual_lives, play_time_seconds, online, world, dimension,
+          (server_id, uuid, name, individual_lives, deaths, play_time_seconds, online, world, dimension,
            x, y, z, last_seen_at, experience_level, total_experience, walked_centimeters, blocks_mined,
            mob_kills, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::timestamptz,$13,$14,$15,$16,$17,now())
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::timestamptz,$14,$15,$16,$17,$18,now())
         ON CONFLICT (server_id, uuid) DO UPDATE SET
           name = COALESCE(EXCLUDED.name, player_snapshots.name),
           individual_lives = EXCLUDED.individual_lives,
+          deaths = EXCLUDED.deaths,
           play_time_seconds = COALESCE(EXCLUDED.play_time_seconds, player_snapshots.play_time_seconds),
           online = EXCLUDED.online,
           world = COALESCE(EXCLUDED.world, player_snapshots.world),
@@ -43,7 +44,7 @@ export async function saveSnapshot(pool, snapshot) {
             WHEN EXCLUDED.online OR player_snapshots.online THEN now()
             ELSE player_snapshots.updated_at
           END
-      `, [snapshot.serverId, player.uuid, player.name, player.individualLives, player.playTimeSeconds,
+      `, [snapshot.serverId, player.uuid, player.name, player.individualLives, player.deaths, player.playTimeSeconds,
         player.online, player.world, player.dimension, player.x, player.y, player.z, player.lastSeenAt,
         player.level, player.totalExperience, player.walkedCentimeters, player.blocksMined, player.mobKills]);
     }
@@ -68,7 +69,7 @@ export async function getVersus(pool, config) {
   // puede haber muchos. `coop` sigue mostrando la pareja de la partida compartida.
   const limit = serverRow.display_mode === 'solo' ? (config.MAX_PLAYERS ?? 30) : 2;
   const playersResult = await pool.query(`
-    SELECT uuid, name, individual_lives,
+    SELECT uuid, name, individual_lives, deaths,
       play_time_seconds, online, world, dimension, x, y, z,
       experience_level, total_experience, walked_centimeters, blocks_mined, mob_kills,
       last_seen_at, updated_at
@@ -85,6 +86,7 @@ export async function getVersus(pool, config) {
     server,
     players: playersResult.rows.map(row => ({
       uuid: row.uuid, name: row.name, lives: server.livesMode === 'shared' ? server.sharedLives : row.individual_lives,
+      deaths: Number(row.deaths ?? 0),
       online: row.online, playTimeSeconds: Number(row.play_time_seconds ?? 0),
       level: row.experience_level == null ? null : Number(row.experience_level),
       totalExperience: row.total_experience == null ? null : Number(row.total_experience),

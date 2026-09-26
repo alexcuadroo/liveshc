@@ -193,6 +193,9 @@ main .arena.grid-mode .fighter-inner > * { direction: ltr; }
 .lives-label, .meta dt { color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: .62rem; }
 .hearts { display: flex; flex-wrap: wrap; gap: .3rem; min-height: 2.3rem; margin: .25rem 0 1.5rem; color: var(--blood); font-size: clamp(1.4rem, 4cqw, 2rem); text-shadow: 0 .15rem 0 var(--blood-dark); }
 .hearts.empty { color: var(--muted); font: 700 1.2rem "Barlow Condensed", sans-serif; text-shadow: none; }
+.individual-lives { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .2rem 2rem; }
+.lives-block, .deaths-block { min-width: 0; }
+.deaths-count { color: var(--ink); font: italic 800 clamp(1.6rem, 4cqw, 2.4rem)/1.15 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
 .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem .7rem; margin: 0; }
 .meta div { min-width: 0; border-top: 1px solid var(--line); padding-top: .55rem; }
 .meta dt { margin-bottom: .25rem; }

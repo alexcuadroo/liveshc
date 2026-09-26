@@ -74,6 +74,27 @@ function hearts(value) {
   return { text, empty: false, label: `${value} vidas restantes` };
 }
 
+function deathsLabel(value) {
+  if (value === null || value === undefined) return 'Muertes desconocidas';
+  return `${value} ${value === 1 ? 'muerte' : 'muertes'}`;
+}
+
+function livesBlock({ text, empty, label }) {
+  return `
+        <div class="lives-block">
+          <div class="lives-label">Vidas restantes</div>
+          <div class="hearts ${empty ? 'empty' : ''}" aria-label="${escapeHtml(label)}">${text}</div>
+        </div>`;
+}
+
+function deathsBlock(value) {
+  return `
+        <div class="deaths-block">
+          <div class="lives-label">Muertes</div>
+          <div class="deaths-count" aria-label="${escapeHtml(deathsLabel(value))}">${formatNumber(value)}</div>
+        </div>`;
+}
+
 function playerMarkup(player, index) {
   const location = formatLocation(player.location);
   const name = player.name || `Jugador ${index + 1}`;
@@ -86,8 +107,8 @@ function playerMarkup(player, index) {
         <div class="status ${player.online ? 'is-online' : ''}">${player.online ? 'En línea' : 'Desconectado'}</div>
         <h3 class="player-name">${escapeHtml(name)}</h3>
         <div class="individual-lives">
-          <div class="lives-label">Vidas restantes</div>
-          <div class="hearts ${lives.empty ? 'empty' : ''}" aria-label="${escapeHtml(lives.label)}">${lives.text}</div>
+          ${livesBlock({ text: lives.text, empty: lives.empty, label: lives.label })}
+          ${deathsBlock(player.deaths)}
         </div>
         <dl class="meta">
           <div><dt>Tiempo jugado</dt><dd>${formatDuration(player.playTimeSeconds)}</dd></div>
@@ -113,8 +134,8 @@ function placeholderMarkup() {
         <div class="status">Esperando</div>
         <h3 class="player-name">Sin jugador todavía</h3>
         <div class="individual-lives">
-          <div class="lives-label">Vidas restantes</div>
-          <div class="hearts empty">El plugin aún no envió datos</div>
+          ${livesBlock({ text: 'El plugin aún no envió datos', empty: true, label: 'El plugin aún no envió datos' })}
+          ${deathsBlock(null)}
         </div>
       </div>
     </div>`;
@@ -221,6 +242,16 @@ function renderDisplayMode(mode, count) {
   document.querySelector('#arena-title').textContent = copy.arenaTitle;
 }
 
+function renderMatchStatus(mode) {
+  // En modo solo el contador global de intentos no aporta: cada ficha ya muestra
+  // las vidas y muertes de su jugador. Se oculta el bloque (y el panel contenedor
+  // si no queda nada más visible, como en coop sin vidas compartidas).
+  const attempt = document.querySelector('.attempt-record');
+  const shared = document.querySelector('#shared-lives');
+  attempt.hidden = mode === 'solo';
+  document.querySelector('.match-status').hidden = attempt.hidden && shared.hidden;
+}
+
 function renderAttemptRecord(server) {
   const value = server?.noLivesCommandExecutions;
   document.querySelector('#attempt-number').value = Number.isSafeInteger(value) ? value : '—';
@@ -242,6 +273,7 @@ async function refresh() {
     renderAttemptRecord(server);
     renderLivesMode(server);
     renderDisplayMode(mode, players.length);
+    renderMatchStatus(mode);
 
     const roster = mode === 'solo'
       ? (players.length ? players : [null])
