@@ -24,7 +24,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import uy.edualex.hardcoresounds.model.CustomSound;
 import uy.edualex.hardcoresounds.service.ActionService;
 import uy.edualex.hardcoresounds.service.CooldownService;
-import uy.edualex.hardcoresounds.service.ResourcePackService;
 import uy.edualex.hardcoresounds.service.SoundService;
 
 public final class MenuManager implements Listener {
@@ -32,16 +31,14 @@ public final class MenuManager implements Listener {
     private final SoundService sounds;
     private final ActionService actions;
     private final CooldownService cooldowns;
-    private final ResourcePackService packs;
     private final NamespacedKey soundKey;
     private final NamespacedKey playerKey;
     private final NamespacedKey actionKey;
 
-    public MenuManager(JavaPlugin plugin, SoundService sounds, ActionService actions, CooldownService cooldowns, ResourcePackService packs) {
+    public MenuManager(JavaPlugin plugin, SoundService sounds, ActionService actions, CooldownService cooldowns) {
         this.sounds = sounds;
         this.actions = actions;
         this.cooldowns = cooldowns;
-        this.packs = packs;
         this.soundKey = new NamespacedKey(plugin, "sound_id");
         this.playerKey = new NamespacedKey(plugin, "player_id");
         this.actionKey = new NamespacedKey(plugin, "menu_action");
@@ -161,6 +158,5 @@ public final class MenuManager implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         cooldowns.remove(event.getPlayer().getUniqueId());
-        packs.remove(event.getPlayer().getUniqueId());
     }
 }

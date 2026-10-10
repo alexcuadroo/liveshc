@@ -10,7 +10,7 @@ Plugin para Paper que reúne vidas, muertes, HUD, comandos administrativos, soni
 
 ## Instalación y actualización
 
-1. Descarga o compila `build/libs/liveshc-1.3.2.jar` y colócalo en `plugins/`.
+1. Descarga o compila `build/libs/liveshc-1.3.4.jar` y colócalo en `plugins/`.
 2. Si usabas HardcoreSounds por separado, apaga el servidor y retira su JAR para evitar tener dos plugins gestionando `/sfx` y el resource pack.
 3. Inicia el servidor. LivesHC crea su carpeta y archivos de configuración al arrancar y al guardar datos.
 4. Configura `plugins/LivesHC/config.yml` y `plugins/LivesHC/sounds.yml`; reinicia o usa `/liveshc reload`.
@@ -22,6 +22,8 @@ Los archivos de vidas y récords son locales y no se eliminan al actualizar el J
 `vidas-iniciales` define las vidas de inicio y `vidas-maximas` el límite. Con `vidas-compartidas: false`, cada UUID tiene su propio contador; con `true`, todos consumen un único contador compartido. En ambos modos, las muertes se cuentan por jugador.
 
 Cada muerte resta una vida. Cuando un contador pasa de una o más vidas a cero, se programa `comando-sin-vidas` para ejecutarse desde la consola; `%player%` se reemplaza por el nombre del jugador. Si `delay-comando-segundos` es mayor que cero, antes de ejecutarlo se comprueba que las vidas sigan en cero. Tras despachar el comando, el contador afectado vuelve a `vidas-iniciales`. En modo compartido se reinicia el contador del equipo. `records.yml` acumula las ejecuciones del comando sin vidas.
+
+El comando se dispara exactamente una vez por agotamiento. Si el comando configurado no existe o no se reconoce, las vidas quedan en cero y se reintenta en la próxima muerte o al volver a entrar, para no dejar al jugador atascado; si `comando-sin-vidas` está vacío, se avisa por consola y se reinician las vidas.
 
 ### Persistencia
 
@@ -49,9 +51,14 @@ hud-muerte:
   fade-in-ticks: 5
   duracion-ticks: 160
   fade-out-ticks: 10
+
+hud-actionbar:
+  habilitado: true
+
+debug: false
 ```
 
-`modo` solo controla la presentación web (`solo` o `coop`); no cambia cómo se comparten las vidas. El HUD usa texto vanilla: en PvP muestra `jugador vs jugador` y las muertes de ambos; en una muerte ambiental muestra `ENTORNO vs jugador` y las muertes del jugador. No necesita resource pack. Los tiempos del HUD están en ticks (20 ticks = 1 segundo).
+`modo` solo controla la presentación web (`solo` o `coop`); no cambia cómo se comparten las vidas. El HUD usa texto vanilla: en PvP muestra `jugador vs jugador` y las muertes de ambos; en una muerte ambiental muestra `ENTORNO vs jugador` y las muertes del jugador. No necesita resource pack. Los tiempos del HUD están en ticks (20 ticks = 1 segundo). `hud-actionbar` muestra periódicamente `Muertes: N | Vidas: M` sobre la barra rápida. `debug` escribe en la consola el detalle de cada muerte y de la ejecución del comando sin vidas; déjalo en `false` salvo que estés diagnosticando.
 
 ## Comandos y permisos
 
@@ -83,13 +90,17 @@ PlaceholderAPI, si está instalado:
 
 El pack se entrega a los jugadores desde LivesHC cuando `resource-pack.enabled` está activado. Por defecto está desactivado. Para habilitarlo, configura URL directa, SHA-1 del ZIP y UUID estable para cada perfil de Minecraft en `resource-pack.profiles` dentro de `config.yml`. El mensaje y si se exige aceptar el pack se controlan con `prompt` y `required`.
 
+### Corazones hardcore (cosmético)
+
+El pack también incluye las texturas de corazones de hardcore (`assets/minecraft/textures/gui/sprites/hud/heart/`) copiadas sobre las normales, para que en supervivencia se vean los corazones hardcore **sin activar el modo hardcore de Minecraft**. Esto es importante: activar `hardcore=true` en `server.properties`/`level.dat` haría que el servidor mande a los jugadores a espectador al morir, rompiendo el sistema de vidas. El cambio es puramente visual y depende del resource pack (si el jugador no lo acepta, verá los corazones normales).
+
 Los sonidos se definen en `sounds.yml`; cada `key` debe existir en `resource-pack/source/assets/hardcoresounds/sounds.json`, que a su vez debe apuntar a un archivo `.ogg` en `resource-pack/source/assets/hardcoresounds/sounds/`. Tras añadir o cambiar audios, genera los ZIP compatibles con 26.1–26.3:
 
 ```powershell
 powershell -File scripts/build-resource-packs.ps1
 ```
 
-El script valida que todos los audios referenciados existan y sean contenedores Ogg, genera ZIP y SHA-1 para cada perfil en `build/resource-packs/`. Publica los ZIP en URLs accesibles directamente y copia URL/SHA-1 a `config.yml`. Los clientes necesitan aceptar el pack para escuchar estos sonidos; el HUD de muertes no depende de él.
+El script valida que todos los audios referenciados existan y sean contenedores Ogg, genera ZIP y SHA-1 para cada perfil en `build/resource-packs/`. Publica los ZIP en URLs accesibles directamente y copia URL/SHA-1 a `config.yml`. Los clientes necesitan aceptar el pack para escuchar estos sonidos y ver los corazones hardcore; el HUD de muerte y el action bar no dependen de él.
 
 ## Sincronización web opcional
 
@@ -111,4 +122,4 @@ En Linux/macOS:
 ./gradlew test build
 ```
 
-El JAR queda en `build/libs/liveshc-1.3.2.jar`. Actualmente el proyecto no contiene pruebas automatizadas (`test NO-SOURCE`); compilar correctamente no sustituye una prueba en un servidor Paper.
+El JAR queda en `build/libs/liveshc-1.3.4.jar`. El proyecto incluye pruebas unitarias de `LivesManager` (`./gradlew test`); compilar y pasar las pruebas no sustituye una prueba en un servidor Paper.

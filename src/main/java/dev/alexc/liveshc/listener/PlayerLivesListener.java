@@ -19,8 +19,13 @@ public final class PlayerLivesListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        plugin.getLivesManager().ensurePlayer(event.getPlayer().getUniqueId());
-        plugin.getWebSnapshotService().publishPlayer(event.getPlayer(), true);
+        Player player = event.getPlayer();
+        plugin.getLivesManager().ensurePlayer(player.getUniqueId());
+        plugin.getWebSnapshotService().publishPlayer(player, true);
+        // Si entró con 0 vidas (por un comando sin vidas que falló), se reintenta.
+        if (plugin.getLives(player.getUniqueId()) == 0) {
+            plugin.handleLivesDepleted(player.getUniqueId(), player.getName(), plugin.isSharedLivesEnabled());
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -29,7 +34,14 @@ public final class PlayerLivesListener implements Listener {
         LifeChange change = plugin.getLivesManager().recordDeath(player.getUniqueId());
         plugin.getWebSnapshotService().publishPlayer(player, true);
         plugin.getDeathDuelDisplay().show(event);
+        if (plugin.isDebugEnabled()) {
+            plugin.getLogger().info("[debug] " + player.getName() + " murió: " + change.previous()
+                    + " -> " + change.current() + " vidas.");
+        }
         if (change.reachedZero()) {
+            plugin.handleLivesDepleted(player.getUniqueId(), player.getName(), change.shared());
+        } else if (change.previous() == 0) {
+            // Ya estaba en 0: se reintenta el comando sin vidas que antes no se despachó.
             plugin.handleLivesDepleted(player.getUniqueId(), player.getName(), change.shared());
         }
     }

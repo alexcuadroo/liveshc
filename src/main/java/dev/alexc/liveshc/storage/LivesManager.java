@@ -1,6 +1,5 @@
 package dev.alexc.liveshc.storage;
 
-import dev.alexc.liveshc.Main;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -9,22 +8,32 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
+import java.util.function.IntSupplier;
+import java.util.logging.Logger;
 
 public final class LivesManager {
     private static final String PLAYERS_SECTION = "players";
     private static final String DEATHS_SECTION = "deaths";
     private static final String SHARED_LIVES_PATH = "shared-lives";
 
-    private final Main plugin;
     private final File playersFile;
+    private final Logger logger;
+    private final IntSupplier initialLives;
+    private final IntSupplier maximumLives;
+    private final BooleanSupplier sharedLivesEnabled;
     private final Map<UUID, Integer> lives = new HashMap<>();
     private final Map<UUID, Integer> deaths = new HashMap<>();
     private Integer sharedLives;
     private YamlConfiguration playersConfig;
 
-    public LivesManager(Main plugin) {
-        this.plugin = plugin;
-        this.playersFile = new File(plugin.getDataFolder(), "players.yml");
+    public LivesManager(File playersFile, Logger logger, IntSupplier initialLives,
+                        IntSupplier maximumLives, BooleanSupplier sharedLivesEnabled) {
+        this.playersFile = playersFile;
+        this.logger = logger;
+        this.initialLives = initialLives;
+        this.maximumLives = maximumLives;
+        this.sharedLivesEnabled = sharedLivesEnabled;
     }
 
     public void load() {
@@ -43,7 +52,7 @@ public final class LivesManager {
                     int storedLives = Math.max(0, players.getInt(key, 0));
                     lives.put(playerId, storedLives);
                 } catch (IllegalArgumentException exception) {
-                    plugin.getLogger().warning("Se ignoró un UUID inválido en players.yml: " + key);
+                    logger.warning("Se ignoró un UUID inválido en players.yml: " + key);
                 }
             }
         }
@@ -57,14 +66,14 @@ public final class LivesManager {
                 UUID playerId = UUID.fromString(key);
                 deaths.put(playerId, Math.max(0, storedDeaths.getInt(key, 0)));
             } catch (IllegalArgumentException exception) {
-                plugin.getLogger().warning("Se ignoró un UUID inválido en deaths de players.yml: " + key);
+                logger.warning("Se ignoró un UUID inválido en deaths de players.yml: " + key);
             }
         }
     }
 
     public int ensurePlayer(UUID playerId) {
         ensureDeaths(playerId);
-        if (plugin.isSharedLivesEnabled()) {
+        if (sharedLivesEnabled.getAsBoolean()) {
             return ensureSharedLives();
         }
         return ensureIndividualPlayer(playerId);
@@ -81,7 +90,7 @@ public final class LivesManager {
     }
 
     public void ensureCurrentModeInitialized() {
-        if (plugin.isSharedLivesEnabled()) {
+        if (sharedLivesEnabled.getAsBoolean()) {
             ensureSharedLives();
         }
     }
@@ -92,7 +101,7 @@ public final class LivesManager {
             return current;
         }
 
-        int initial = Math.min(plugin.getInitialLives(), plugin.getMaximumLives());
+        int initial = Math.min(initialLives.getAsInt(), maximumLives.getAsInt());
         lives.put(playerId, initial);
         save();
         return initial;
@@ -109,11 +118,11 @@ public final class LivesManager {
     }
 
     private int initialValue() {
-        return Math.min(plugin.getInitialLives(), plugin.getMaximumLives());
+        return Math.min(initialLives.getAsInt(), maximumLives.getAsInt());
     }
 
     public int getLives(UUID playerId) {
-        return getLives(playerId, plugin.isSharedLivesEnabled());
+        return getLives(playerId, sharedLivesEnabled.getAsBoolean());
     }
 
     public Map<UUID, Integer> getKnownIndividualLives() {
@@ -130,17 +139,17 @@ public final class LivesManager {
 
     public int getLives(UUID playerId, boolean shared) {
         if (shared) {
-            return Math.min(Math.max(ensureSharedLives(), 0), plugin.getMaximumLives());
+            return Math.min(Math.max(ensureSharedLives(), 0), maximumLives.getAsInt());
         }
         Integer current = lives.get(playerId);
         if (current == null) {
-            return Math.min(plugin.getInitialLives(), plugin.getMaximumLives());
+            return Math.min(initialLives.getAsInt(), maximumLives.getAsInt());
         }
-        return Math.min(Math.max(current, 0), plugin.getMaximumLives());
+        return Math.min(Math.max(current, 0), maximumLives.getAsInt());
     }
 
     public LifeChange recordDeath(UUID playerId) {
-        boolean shared = plugin.isSharedLivesEnabled();
+        boolean shared = sharedLivesEnabled.getAsBoolean();
         int previous = shared ? ensureSharedLives() : ensureIndividualPlayer(playerId);
         int current = Math.max(0, previous - 1);
         setLives(playerId, current, shared);
@@ -151,16 +160,16 @@ public final class LivesManager {
     }
 
     public AddResult addLives(UUID playerId, int amount) {
-        boolean shared = plugin.isSharedLivesEnabled();
+        boolean shared = sharedLivesEnabled.getAsBoolean();
         int previous = shared ? ensureSharedLives() : ensureIndividualPlayer(playerId);
-        int current = (int) Math.min(plugin.getMaximumLives(), (long) previous + amount);
+        int current = (int) Math.min(maximumLives.getAsInt(), (long) previous + amount);
         setLives(playerId, current, shared);
         save();
         return new AddResult(previous, current, shared);
     }
 
     public RemoveResult removeLives(UUID playerId, int amount) {
-        boolean shared = plugin.isSharedLivesEnabled();
+        boolean shared = sharedLivesEnabled.getAsBoolean();
         int previous = shared ? ensureSharedLives() : ensureIndividualPlayer(playerId);
         int current = (int) Math.max(0L, (long) previous - amount);
         setLives(playerId, current, shared);
@@ -169,7 +178,7 @@ public final class LivesManager {
     }
 
     public int resetLives(UUID playerId) {
-        return resetLives(playerId, plugin.isSharedLivesEnabled());
+        return resetLives(playerId, sharedLivesEnabled.getAsBoolean());
     }
 
     public int resetLives(UUID playerId, boolean shared) {
@@ -226,7 +235,7 @@ public final class LivesManager {
         try {
             playersConfig.save(playersFile);
         } catch (IOException exception) {
-            plugin.getLogger().severe("No se pudo guardar players.yml: " + exception.getMessage());
+            logger.severe("No se pudo guardar players.yml: " + exception.getMessage());
         }
     }
 

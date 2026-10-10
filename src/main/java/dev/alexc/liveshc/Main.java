@@ -2,6 +2,7 @@ package dev.alexc.liveshc;
 
 import dev.alexc.liveshc.command.LivesHCCommand;
 import dev.alexc.liveshc.display.DeathDuelDisplay;
+import dev.alexc.liveshc.display.LivesActionBarDisplay;
 import dev.alexc.liveshc.listener.PlayerLivesListener;
 import dev.alexc.liveshc.placeholder.LivesHCExpansion;
 import dev.alexc.liveshc.storage.LivesManager;
@@ -25,10 +26,13 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -43,16 +47,20 @@ public final class Main extends JavaPlugin {
     private int deathHudFadeInTicks;
     private int deathHudStayTicks;
     private int deathHudFadeOutTicks;
+    private boolean livesActionBarEnabled;
+    private boolean debugEnabled;
     private String noLivesCommand;
     private LivesManager livesManager;
     private RecordsManager recordsManager;
     private WebSnapshotService webSnapshotService;
     private DeathDuelDisplay deathDuelDisplay;
     private ConfigurationLoader soundConfigurationLoader;
+    private boolean soundsEnabled;
     private final AtomicReference<PluginSettings> soundSettings = new AtomicReference<>();
     private SoundService soundService;
     private CooldownService cooldownService;
     private ResourcePackService resourcePackService;
+    private final Map<UUID, BukkitTask> pendingDepletions = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -60,16 +68,17 @@ public final class Main extends JavaPlugin {
         if (!new File(getDataFolder(), "sounds.yml").exists()) saveResource("sounds.yml", false);
         loadSettings();
 
-        livesManager = new LivesManager(this);
+        livesManager = new LivesManager(new File(getDataFolder(), "players.yml"), getLogger(),
+                this::getInitialLives, this::getMaximumLives, this::isSharedLivesEnabled);
         livesManager.load();
         livesManager.clampToMaximum(maximumLives);
         livesManager.ensureCurrentModeInitialized();
         recordsManager = new RecordsManager(this);
         recordsManager.load();
         deathDuelDisplay = new DeathDuelDisplay(this);
+        new LivesActionBarDisplay(this).start();
         if (!enableSounds()) {
-            getServer().getPluginManager().disablePlugin(this);
-            return;
+            getLogger().warning("El sistema de sonidos no está disponible; LivesHC continúa con vidas y HUD.");
         }
 
         getServer().getPluginManager().registerEvents(new PlayerLivesListener(this), this);
@@ -85,6 +94,7 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        cancelAllPendingDepletions();
         if (webSnapshotService != null) {
             webSnapshotService.stop();
         }
@@ -106,7 +116,7 @@ public final class Main extends JavaPlugin {
             cooldownService = new CooldownService();
             resourcePackService = new ResourcePackService(getLogger(), loaded.settings());
             ActionService actions = new ActionService(soundService, cooldownService, soundSettings::get);
-            MenuManager menus = new MenuManager(this, soundService, actions, cooldownService, resourcePackService);
+            MenuManager menus = new MenuManager(this, soundService, actions, cooldownService);
             getServer().getPluginManager().registerEvents(menus, this);
             getServer().getPluginManager().registerEvents(new ConnectionListener(resourcePackService), this);
             SfxCommand command = new SfxCommand(soundService, actions, menus,
@@ -114,8 +124,10 @@ public final class Main extends JavaPlugin {
             getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event ->
                     event.registrar().register(command.build().build(), "Controla sonidos personalizados", List.of("hardcoresounds")));
             getLogger().info("Sistema de sonidos integrado: " + loaded.sounds().size() + " sonidos.");
+            soundsEnabled = true;
             return true;
         } catch (Exception exception) {
+            soundsEnabled = false;
             getLogger().severe("No se pudo cargar la configuración de sonidos: " + exception.getMessage());
             return false;
         }
@@ -168,9 +180,9 @@ public final class Main extends JavaPlugin {
         int configuredInitial = getConfig().getInt("vidas-iniciales", 3);
         int configuredDelay = getConfig().getInt("delay-comando-segundos", 0);
 
-        if (configuredMaximum < 0) {
-            getLogger().warning("vidas-maximas no puede ser negativa; se usará 0.");
-            configuredMaximum = 0;
+        if (configuredMaximum < 1) {
+            getLogger().warning("vidas-maximas debe ser al menos 1; se usará 1.");
+            configuredMaximum = 1;
         }
         if (configuredInitial < 0) {
             getLogger().warning("vidas-iniciales no puede ser negativa; se usará 0.");
@@ -198,6 +210,8 @@ public final class Main extends JavaPlugin {
         deathHudFadeInTicks = nonNegativeTicks("hud-muerte.fade-in-ticks", 5);
         deathHudStayTicks = nonNegativeTicks("hud-muerte.duracion-ticks", 160);
         deathHudFadeOutTicks = nonNegativeTicks("hud-muerte.fade-out-ticks", 10);
+        livesActionBarEnabled = getConfig().getBoolean("hud-actionbar.habilitado", true);
+        debugEnabled = getConfig().getBoolean("debug", false);
     }
 
     private int nonNegativeTicks(String path, int fallback) {
@@ -233,7 +247,12 @@ public final class Main extends JavaPlugin {
             if (webSnapshotService != null) {
                 webSnapshotService.reload();
             }
-            reloadSoundSettings();
+            cancelAllPendingDepletions();
+            if (soundsEnabled) {
+                reloadSoundSettings();
+            } else {
+                getLogger().warning("El sistema de sonidos sigue deshabilitado; se omitió su recarga (revisa sounds.yml y resource-pack).");
+            }
             return true;
         } catch (IOException | InvalidConfigurationException | RuntimeException exception) {
             getLogger().severe("No se pudo recargar config.yml: " + exception.getMessage());
@@ -248,34 +267,61 @@ public final class Main extends JavaPlugin {
             command = command.substring(1).trim();
         }
         if (command.isEmpty()) {
-            getLogger().severe("comando-sin-vidas está vacío; no se ejecutó ninguna acción para "
-                    + playerName + ".");
+            getLogger().severe("comando-sin-vidas está vacío; se reinician las vidas de "
+                    + playerName + " sin ejecutar ninguna acción. Configúralo en config.yml.");
+            livesManager.resetLives(playerId, shared);
+            webSnapshotService.publishAll(false);
             return;
         }
 
         String parsedCommand = command.replace("%player%", playerName);
         long delayTicks = noLivesCommandDelaySeconds * 20L;
         if (delayTicks == 0L) {
-            executeNoLivesCommand(playerId, parsedCommand, shared);
+            executeNoLivesCommand(playerId, playerName, parsedCommand, shared);
             return;
         }
 
-        Bukkit.getScheduler().runTaskLater(this, () -> {
+        cancelPendingDepletion(playerId);
+        BukkitTask task = Bukkit.getScheduler().runTaskLater(this, () -> {
+            pendingDepletions.remove(playerId);
             if (livesManager.getLives(playerId, shared) == 0) {
-                executeNoLivesCommand(playerId, parsedCommand, shared);
+                executeNoLivesCommand(playerId, playerName, parsedCommand, shared);
+            } else if (debugEnabled) {
+                getLogger().info("[debug] " + playerName + " recuperó vidas durante el delay; no se ejecuta "
+                        + "el comando sin vidas.");
             }
         }, delayTicks);
+        pendingDepletions.put(playerId, task);
     }
 
-    private void executeNoLivesCommand(UUID playerId, String parsedCommand, boolean shared) {
+    private void executeNoLivesCommand(UUID playerId, String playerName, String parsedCommand, boolean shared) {
         boolean dispatched = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsedCommand);
         if (dispatched) {
             recordsManager.recordNoLivesCommandExecution();
             livesManager.resetLives(playerId, shared);
             webSnapshotService.publishAll(false);
+            if (debugEnabled) {
+                getLogger().info("[debug] " + playerName + " agotó vidas; comando ejecutado: '"
+                        + parsedCommand + "'. Vidas reiniciadas.");
+            }
         } else {
-            getLogger().warning("El comando sin vidas no fue reconocido: " + parsedCommand);
+            getLogger().warning("El comando sin vidas no fue reconocido para " + playerName + ": '"
+                    + parsedCommand + "'. Las vidas quedan en 0 y se reintentará en la próxima muerte o entrada.");
         }
+    }
+
+    private void cancelPendingDepletion(UUID playerId) {
+        BukkitTask task = pendingDepletions.remove(playerId);
+        if (task != null) {
+            task.cancel();
+        }
+    }
+
+    private void cancelAllPendingDepletions() {
+        for (BukkitTask task : pendingDepletions.values()) {
+            task.cancel();
+        }
+        pendingDepletions.clear();
     }
 
     public int getLives(UUID playerId) {
@@ -304,10 +350,6 @@ public final class Main extends JavaPlugin {
 
     public String getNoLivesCommand() {
         return noLivesCommand;
-    }
-
-    public int getNoLivesCommandDelaySeconds() {
-        return noLivesCommandDelaySeconds;
     }
 
     public LivesManager getLivesManager() {
@@ -340,5 +382,13 @@ public final class Main extends JavaPlugin {
 
     public int getDeathHudFadeOutTicks() {
         return deathHudFadeOutTicks;
+    }
+
+    public boolean isLivesActionBarEnabled() {
+        return livesActionBarEnabled;
+    }
+
+    public boolean isDebugEnabled() {
+        return debugEnabled;
     }
 }

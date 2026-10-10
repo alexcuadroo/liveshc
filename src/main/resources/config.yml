@@ -31,6 +31,14 @@ hud-muerte:
   duracion-ticks: 160
   fade-out-ticks: 10
 
+# Muestra periódicamente las muertes y vidas en el action bar, sobre la barra rápida.
+hud-actionbar:
+  habilitado: true
+
+# Escribe en la consola el detalle de cada muerte y de la ejecución del comando
+# sin vidas. Útil para diagnosticar. Déjalo en false salvo que estés probando.
+debug: false
+
 # Resource pack para los sonidos personalizados. Publica ZIP compatibles y
 # configura URL, SHA-1 y UUID por perfil antes de habilitarlo.
 resource-pack:
