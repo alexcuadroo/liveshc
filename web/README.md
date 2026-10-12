@@ -4,8 +4,10 @@ API y panel público para LivesHC. PostgreSQL es una proyección de lectura; `pl
 
 El panel adapta título y skins según el `modo` enviado por el plugin (`solo` o `coop`):
 
-- `solo`: cada jugador conserva sus propias vidas. Con un solo jugador muestra la ficha destacada; con varios genera una rejilla adaptativa de fichas compactas ordenadas por relevancia (online primero, luego más reciente).
+- `solo`: cada jugador conserva sus propias vidas. Con un solo jugador muestra la ficha destacada; con varios genera una rejilla adaptativa de fichas compactas.
 - `coop`: muestra todo el equipo. Con dos jugadores mantiene la pareja con insignia `+`; con más pasa a la rejilla adaptativa.
+
+En ambos modos el roster se ordena primero por conexión (en línea antes que desconectados) y, dentro de cada grupo, alfabéticamente por nombre. En las cuentas de Bedrock (Floodgate) se ignora el punto inicial, de modo que `.Alex` ordena junto a `Alex` y no antes que la `A`.
 
 En ambos modos el bloque "Intento hardcore" muestra el intento actual: `comandos-sin-vidas-ejecutados` + 1 (0 ejecuciones = intento #1). El máximo de jugadores mostrados lo controla `MAX_PLAYERS` (por defecto 30).
 

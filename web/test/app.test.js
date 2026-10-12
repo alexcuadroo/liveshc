@@ -182,6 +182,20 @@ test('coop returns every tracked player up to the configured limit', async () =>
   assert.ok(playersQuery.sql.includes('ORDER BY online DESC'));
 });
 
+test('orders the roster alphabetically ignoring the Bedrock dot', async () => {
+  const pool = poolWith({
+    serverRow: serverRow(),
+    playerRows: [
+      playerRow({ uuid: PLAYER_1, name: 'AlexNdh', online: false }),
+      playerRow({ uuid: PLAYER_2, name: '.AlexCuadro7412', online: false })
+    ]
+  });
+  const response = await request(createApp({ pool, config })).get('/api/v1/versus');
+  assert.equal(response.status, 200);
+  const playersQuery = pool.queries.find(item => item.sql.includes('FROM player_snapshots'));
+  assert.ok(playersQuery.sql.includes("LOWER(LTRIM(name, '.'))"));
+});
+
 test('returns empty players before the first snapshot', async () => {
   const pool = poolWith({ serverRow: null });
   const response = await request(createApp({ pool, config })).get('/api/v1/versus');

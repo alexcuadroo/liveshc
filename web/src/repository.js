@@ -68,6 +68,9 @@ export async function getVersus(pool, config) {
   // Ambos modos muestran hasta `MAX_PLAYERS` jugadores; `solo` y `coop` solo cambian la
   // presentación (títulos, insignia de equipo y contador de vidas compartidas).
   const limit = config.MAX_PLAYERS ?? 30;
+  // Online primero; dentro de cada grupo manda el orden alfabético del nombre. El punto
+  // inicial de las cuentas de Bedrock (Floodgate) se ignora al comparar, de modo que
+  // ".AlexCuadro7412" ordena junto a "AlexCuadro7412" y no antes que la "A".
   const playersResult = await pool.query(`
     SELECT uuid, name, individual_lives, deaths,
       play_time_seconds, online, world, dimension, x, y, z,
@@ -75,7 +78,7 @@ export async function getVersus(pool, config) {
       last_seen_at, updated_at
     FROM player_snapshots
     WHERE server_id = $1
-    ORDER BY online DESC, updated_at DESC
+    ORDER BY online DESC, LOWER(LTRIM(name, '.')) ASC, updated_at DESC
     LIMIT $2
   `, [config.SERVER_ID, limit]);
 
