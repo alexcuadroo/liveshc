@@ -685,6 +685,11 @@ select:focus, input[type="number"]:focus {
   height: 100%;
   border: none;
   display: block;
+  /* Chromium pinta con fondo opaco los iframes cuyo color-scheme resuelve a
+     oscuro, ignorando el `background: transparent` del overlay. El editor
+     declara `color-scheme: dark` en :root, así que forzamos esquema claro en
+     el iframe para que se vea el fondo elegido en la vista previa. */
+  color-scheme: light;
 }
 
 /* OBS Instructions Accordion */
