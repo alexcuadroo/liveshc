@@ -12,6 +12,7 @@ export function loadConfig(env = process.env) {
     HEAD_3D_URL_TEMPLATE: z.string().url().default('https://mc-heads.net/head/{uuid}/128'),
     TRUST_PROXY: z.coerce.number().int().min(0).default(1),
     MAX_PLAYERS: z.coerce.number().int().min(1).max(500).default(30),
+    POLL_INTERVAL_SECONDS: z.coerce.number().int().min(1).max(300).default(15),
     HIDDEN_PLAYERS: z.string().optional().default('')
       .transform(val => val.split(',').map(s => s.trim().toLowerCase()).filter(Boolean))
   }).parse({

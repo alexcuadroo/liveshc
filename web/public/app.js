@@ -1,4 +1,4 @@
-const POLL_INTERVAL = 30_000;
+let pollInterval = 15_000;
 const state = {
   timer: null,
   skinTemplate: 'https://mc-heads.net/body/{uuid}/180',
@@ -859,7 +859,7 @@ async function refresh() {
 
 function schedule() {
   clearInterval(state.timer);
-  if (!document.hidden) state.timer = setInterval(refresh, POLL_INTERVAL);
+  if (!document.hidden) state.timer = setInterval(refresh, pollInterval);
 }
 
 document.querySelector('#arena').replaceChildren(
@@ -873,6 +873,10 @@ setupRadar();
 fetch('/api/v1/config').then(response => response.ok ? response.json() : null).then(config => {
   if (config?.skinUrlTemplate?.includes('{uuid}')) state.skinTemplate = config.skinUrlTemplate;
   if (config?.headUrlTemplate?.includes('{uuid}')) state.headTemplate = config.headUrlTemplate;
+  if (typeof config?.pollIntervalSeconds === 'number' && config.pollIntervalSeconds > 0) {
+    pollInterval = config.pollIntervalSeconds * 1000;
+    schedule();
+  }
   renderServerAddress(config?.serverAddress);
 }).finally(refresh);
 document.addEventListener('visibilitychange', () => {

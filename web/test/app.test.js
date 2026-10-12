@@ -211,6 +211,7 @@ test('exposes the front-end configuration including the server address', async (
   assert.equal(response.status, 200);
   assert.equal(response.body.skinUrlTemplate, config.SKIN_URL_TEMPLATE);
   assert.equal(response.body.serverAddress, config.SERVER_ADDRESS);
+  assert.equal(response.body.pollIntervalSeconds, config.POLL_INTERVAL_SECONDS);
 });
 
 test('serves front-end assets with revalidation headers', async () => {

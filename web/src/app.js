@@ -76,7 +76,8 @@ export function createApp({ pool, config }) {
       skinUrlTemplate: config.SKIN_URL_TEMPLATE,
       headUrlTemplate: headTemplate,
       head3dUrlTemplate: head3dTemplate,
-      serverAddress: config.SERVER_ADDRESS
+      serverAddress: config.SERVER_ADDRESS,
+      pollIntervalSeconds: config.POLL_INTERVAL_SECONDS
     });
   });
 
