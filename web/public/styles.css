@@ -181,7 +181,7 @@ main .arena.grid-mode .fighter-inner > * { direction: ltr; }
 .arena.grid-mode .skin-wrap { min-height: 0; height: clamp(8rem, 50cqw, 12rem); }
 .arena.grid-mode .skin { width: auto; height: 100%; max-width: 100%; max-height: none; }
 .arena.grid-mode .status { margin-bottom: .5rem; }
-.arena.grid-mode .player-name { margin-bottom: .85rem; font-size: clamp(1.6rem, 7cqw, 2.2rem); }
+.arena.grid-mode .player-name { font-size: clamp(1.6rem, 7cqw, 2.2rem); }
 .arena.grid-mode .hearts { min-height: 1.6rem; margin: .25rem 0 1rem; font-size: clamp(1.15rem, 5cqw, 1.5rem); }
 .arena.grid-mode .meta { gap: .7rem; }
 .arena.grid-mode .survival { margin-top: 1rem; }
@@ -197,11 +197,14 @@ main .arena.grid-mode .fighter-inner > * { direction: ltr; }
 .skin-wrap { align-self: stretch; display: flex; align-items: flex-end; justify-content: center; min-height: 270px; background: radial-gradient(ellipse at 50% 100%, rgba(216,58,46,.18), transparent 60%); }
 .skin { width: min(100%, 190px); height: auto; max-height: 350px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 1.5rem 1rem rgba(0,0,0,.55)); }
 .stats { padding-bottom: .4rem; min-width: 0; }
+.player-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: 1rem; }
+.player-identity { min-width: 0; }
+.player-head .status { margin-bottom: .4rem; }
 .status { display: inline-flex; gap: .4rem; align-items: center; margin-bottom: .75rem; color: var(--muted); font-size: .68rem; text-transform: uppercase; letter-spacing: .12em; }
 .status::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: var(--muted); }
 .status.is-online { color: var(--alive); }
 .status.is-online::before { background: var(--alive); }
-.player-name { overflow-wrap: anywhere; margin: 0 0 1rem; font: 800 clamp(2rem, 5cqw, 3.6rem)/.85 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+.player-name { overflow-wrap: anywhere; margin: 0; font: 800 clamp(2rem, 5cqw, 3.6rem)/.85 "Barlow Condensed", sans-serif; text-transform: uppercase; }
 
 /* Vitals: HP y Food */
 .vitals-block {
@@ -279,8 +282,10 @@ main .arena.grid-mode .fighter-inner > * { direction: ltr; }
 .hearts { display: flex; flex-wrap: wrap; gap: .3rem; min-height: 2.3rem; margin: .25rem 0 1rem; color: var(--blood); font-size: clamp(1.4rem, 4cqw, 2rem); text-shadow: 0 .15rem 0 var(--blood-dark); }
 .hearts.empty { color: var(--muted); font: 700 1.2rem "Barlow Condensed", sans-serif; text-shadow: none; }
 .individual-lives { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .2rem 2rem; margin-bottom: .6rem; }
-.lives-block, .deaths-block { min-width: 0; }
-.deaths-count { color: var(--ink); font: italic 800 clamp(1.6rem, 4cqw, 2.4rem)/1.15 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
+.lives-block { min-width: 0; }
+.deaths-badge { flex: none; display: flex; flex-direction: column; align-items: center; gap: .1rem; line-height: 1; user-select: none; }
+.deaths-icon { font-size: 1.15rem; line-height: 1; filter: drop-shadow(0 .08rem 0 rgba(0, 0, 0, .55)); }
+.deaths-number { color: var(--ink); font: italic 800 clamp(1.5rem, 4cqw, 2.2rem)/1 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
 .meta { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem .7rem; margin: 0; }
 .meta div { min-width: 0; border-top: 1px solid var(--line); padding-top: .45rem; }
 .meta dt { margin-bottom: .2rem; }

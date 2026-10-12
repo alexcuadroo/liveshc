@@ -186,12 +186,12 @@ function livesBlock({ text, empty, label }) {
         </div>`;
 }
 
-function deathsBlock(value) {
+function deathsBadge(value) {
   return `
-        <div class="deaths-block">
-          <div class="lives-label">Muertes</div>
-          <div class="deaths-count" aria-label="${escapeHtml(deathsLabel(value))}">${formatNumber(value)}</div>
-        </div>`;
+          <div class="deaths-badge" aria-label="${escapeHtml(deathsLabel(value))}">
+            <span class="deaths-icon" aria-hidden="true">💀</span>
+            <span class="deaths-number">${formatNumber(value)}</span>
+          </div>`;
 }
 
 function formatItemName(raw) {
@@ -271,11 +271,15 @@ function playerMarkup(player, index) {
     <div class="fighter-inner">
       <div class="skin-wrap"><img class="skin" src="${escapeHtml(skinUrl)}" alt="Skin de ${escapeHtml(name)}" width="180" height="360"></div>
       <div class="stats">
-        <div class="status ${player.online ? 'is-online' : ''}">${player.online ? 'En línea' : 'Desconectado'}</div>
-        <h3 class="player-name">${escapeHtml(name)}</h3>
+        <div class="player-head">
+          <div class="player-identity">
+            <div class="status ${player.online ? 'is-online' : ''}">${player.online ? 'En línea' : 'Desconectado'}</div>
+            <h3 class="player-name">${escapeHtml(name)}</h3>
+          </div>
+          ${deathsBadge(player.deaths)}
+        </div>
         <div class="individual-lives">
           ${livesBlock({ text: lives.text, empty: lives.empty, label: lives.label })}
-          ${deathsBlock(player.deaths)}
         </div>
         ${vitalsMarkup(player)}
         ${equipmentMarkup(player.equipment)}
@@ -300,11 +304,15 @@ function placeholderMarkup() {
     <div class="fighter-inner">
       <div class="skin-wrap"><img class="skin" src="${fallbackSkin}" alt="Sin jugador todavía" width="180" height="360"></div>
       <div class="stats">
-        <div class="status">Esperando</div>
-        <h3 class="player-name">Sin jugador todavía</h3>
+        <div class="player-head">
+          <div class="player-identity">
+            <div class="status">Esperando</div>
+            <h3 class="player-name">Sin jugador todavía</h3>
+          </div>
+          ${deathsBadge(null)}
+        </div>
         <div class="individual-lives">
           ${livesBlock({ text: 'El plugin aún no envió datos', empty: true, label: 'El plugin aún no envió datos' })}
-          ${deathsBlock(null)}
         </div>
       </div>
     </div>`;
