@@ -172,8 +172,10 @@ function createVersus() {
 function renderArena(roster, mode, shared) {
   const arena = document.querySelector('#arena');
   const solo = mode === 'solo';
-  const many = solo && roster.length > 1;
-  const showVersus = !solo && !shared && roster.length >= 2;
+  // `solo` destaca un jugador; `coop` conserva la pareja clásica y pasa a rejilla
+  // cuando el equipo supera los dos jugadores.
+  const many = roster.length > (solo ? 1 : 2);
+  const showVersus = !solo && !shared && roster.length === 2;
 
   arena.classList.toggle('solo-mode', solo && !many);
   arena.classList.toggle('grid-mode', many);
@@ -206,7 +208,7 @@ const DISPLAY_COPY = {
     documentTitle: 'Supervivencia en solitario | LivesHC',
     arenaTitle: 'Jugador destacado',
     skipLink: 'Saltar al jugador',
-    attemptCaption: 'veces que el mundo puso a prueba al jugador'
+    attemptCaption: 'intento actual'
   },
   soloMany: {
     eyebrow: 'Supervivencia individual',
@@ -214,7 +216,7 @@ const DISPLAY_COPY = {
     documentTitle: 'Supervivencia individual | LivesHC',
     arenaTitle: 'Jugadores',
     skipLink: 'Saltar a los jugadores',
-    attemptCaption: 'veces que el mundo puso a prueba a cada jugador'
+    attemptCaption: 'intento actual'
   },
   coop: {
     eyebrow: 'Supervivencia cooperativa',
@@ -222,13 +224,21 @@ const DISPLAY_COPY = {
     documentTitle: 'Supervivencia cooperativa | LivesHC',
     arenaTitle: 'Equipo',
     skipLink: 'Saltar al equipo',
-    attemptCaption: 'veces que el mundo puso a prueba al equipo'
+    attemptCaption: 'intento actual del equipo'
+  },
+  coopMany: {
+    eyebrow: 'Supervivencia cooperativa',
+    title: 'Todo el equipo.<br /><em>Y... muchos intentos.</em>',
+    documentTitle: 'Supervivencia cooperativa | LivesHC',
+    arenaTitle: 'Equipo',
+    skipLink: 'Saltar al equipo',
+    attemptCaption: 'intento actual del equipo'
   }
 };
 
 function copyFor(mode, count) {
-  if (mode === 'solo' && count > 1) return DISPLAY_COPY.soloMany;
-  return DISPLAY_COPY[mode] ?? DISPLAY_COPY.coop;
+  if (mode === 'solo') return count > 1 ? DISPLAY_COPY.soloMany : DISPLAY_COPY.solo;
+  return count > 2 ? DISPLAY_COPY.coopMany : DISPLAY_COPY.coop;
 }
 
 function renderDisplayMode(mode, count) {
@@ -253,11 +263,14 @@ function renderMatchStatus(mode) {
 }
 
 function renderAttemptRecord(server) {
-  const value = server?.noLivesCommandExecutions;
-  document.querySelector('#attempt-number').value = Number.isSafeInteger(value) ? value : '—';
-  document.querySelector('#attempt-number').textContent = Number.isSafeInteger(value)
-    ? new Intl.NumberFormat('es').format(value)
-    : '—';
+  // `comandos-sin-vidas-ejecutados` cuenta las veces que se agotaron las vidas: con 0
+  // ejecuciones se está jugando el intento #1.
+  const executions = server?.noLivesCommandExecutions;
+  const attempt = Number.isSafeInteger(executions) ? executions + 1 : null;
+  document.querySelector('#attempt-number').value = attempt ?? '—';
+  document.querySelector('#attempt-number').textContent = attempt === null
+    ? '—'
+    : new Intl.NumberFormat('es').format(attempt);
 }
 
 async function copyText(value) {
@@ -326,7 +339,7 @@ async function refresh() {
 
     const roster = mode === 'solo'
       ? (players.length ? players : [null])
-      : [players[0] ?? null, players[1] ?? null];
+      : (players.length > 1 ? players : [players[0] ?? null, players[1] ?? null]);
     renderArena(roster, mode, shared);
 
     state.hasData = true;

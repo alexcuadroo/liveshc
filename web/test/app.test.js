@@ -132,6 +132,21 @@ test('defaults missing deaths to zero for older plugins', async () => {
   assert.equal(playerInsert.params[4], 0);
 });
 
+test('accepts Floodgate (Bedrock) UUIDs in snapshots', async () => {
+  const pool = poolForSave();
+  const floodgate = '00000000-0000-0000-0009-01f7810a7666';
+  const response = await request(createApp({ pool, config }))
+    .post('/internal/v1/snapshot')
+    .set('Authorization', `Bearer ${config.INGEST_TOKEN}`)
+    .send({
+      ...validSnapshot,
+      players: [{ ...validSnapshot.players[0], uuid: floodgate, name: '.AlexCuadro7412' }]
+    });
+  assert.equal(response.status, 204);
+  const playerInsert = pool.queries.find(item => item.sql.includes('INSERT INTO player_snapshots'));
+  assert.equal(playerInsert.params[1], floodgate);
+});
+
 test('solo returns every tracked player up to the configured limit', async () => {
   const pool = poolWith({
     serverRow: serverRow({ display_mode: 'solo' }),
@@ -149,17 +164,21 @@ test('solo returns every tracked player up to the configured limit', async () =>
   assert.equal(playersQuery.params[1], config.MAX_PLAYERS);
 });
 
-test('coop returns two auto-selected players ordered by online', async () => {
+test('coop returns every tracked player up to the configured limit', async () => {
   const pool = poolWith({
     serverRow: serverRow({ display_mode: 'coop', lives_mode: 'shared', shared_lives: 2 }),
-    playerRows: [playerRow(), playerRow({ uuid: PLAYER_2, name: 'Sam', online: false })]
+    playerRows: [
+      playerRow(),
+      playerRow({ uuid: PLAYER_2, name: 'Sam', online: false }),
+      playerRow({ uuid: '00000000-0000-0000-0009-01f7810a7666', name: '.AlexCuadro7412', online: false })
+    ]
   });
   const response = await request(createApp({ pool, config })).get('/api/v1/versus');
   assert.equal(response.status, 200);
-  assert.equal(response.body.players.length, 2);
+  assert.equal(response.body.players.length, 3);
   assert.equal(response.body.players[0].lives, 2);
   const playersQuery = pool.queries.find(item => item.sql.includes('FROM player_snapshots'));
-  assert.equal(playersQuery.params[1], 2);
+  assert.equal(playersQuery.params[1], config.MAX_PLAYERS);
   assert.ok(playersQuery.sql.includes('ORDER BY online DESC'));
 });
 

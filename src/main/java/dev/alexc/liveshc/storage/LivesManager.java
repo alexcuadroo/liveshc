@@ -6,7 +6,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
@@ -127,6 +129,16 @@ public final class LivesManager {
 
     public Map<UUID, Integer> getKnownIndividualLives() {
         return Map.copyOf(lives);
+    }
+
+    /**
+     * UUID de todos los jugadores conocidos: los que tienen vidas individuales y los que solo
+     * figuran por sus muertes (habitual en vidas compartidas o con cuentas Floodgate/Bedrock).
+     */
+    public Set<UUID> getKnownPlayers() {
+        Set<UUID> known = new HashSet<>(lives.keySet());
+        known.addAll(deaths.keySet());
+        return Set.copyOf(known);
     }
 
     public Integer getStoredSharedLives() {

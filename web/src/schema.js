@@ -1,8 +1,12 @@
 import { z } from 'zod';
 
+// Acepta cualquier UUID canónico, incluidos los de Floodgate/Bedrock
+// (00000000-0000-0000-0009-...), que `z.uuid()` rechaza por su versión/variante.
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const nullableFinite = z.number().finite().nullable();
 const player = z.object({
-  uuid: z.string().uuid(),
+  uuid: z.string().regex(UUID_PATTERN),
   name: z.string().min(1).max(32).nullable(),
   individualLives: z.number().int().min(0),
   deaths: z.number().int().min(0).default(0),

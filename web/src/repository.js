@@ -65,9 +65,9 @@ export async function getVersus(pool, config) {
   const serverRow = serverResult.rows[0];
   if (!serverRow) return { server: null, players: [] };
 
-  // `solo` ya no significa "un jugador": cada jugador conserva sus propias vidas y
-  // puede haber muchos. `coop` sigue mostrando la pareja de la partida compartida.
-  const limit = serverRow.display_mode === 'solo' ? (config.MAX_PLAYERS ?? 30) : 2;
+  // Ambos modos muestran hasta `MAX_PLAYERS` jugadores; `solo` y `coop` solo cambian la
+  // presentación (títulos, insignia de equipo y contador de vidas compartidas).
+  const limit = config.MAX_PLAYERS ?? 30;
   const playersResult = await pool.query(`
     SELECT uuid, name, individual_lives, deaths,
       play_time_seconds, online, world, dimension, x, y, z,

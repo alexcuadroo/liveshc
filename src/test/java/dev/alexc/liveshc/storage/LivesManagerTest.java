@@ -116,6 +116,18 @@ class LivesManagerTest {
     }
 
     @Test
+    void knownPlayersIncludeSharedDeaths(@TempDir Path dir) {
+        UUID player = UUID.randomUUID();
+        LivesManager manager = shared(dir.resolve("players.yml").toFile(), 3, 5);
+        manager.ensurePlayer(player);
+
+        assertFalse(manager.getKnownIndividualLives().containsKey(player),
+                "en vidas compartidas el jugador no tiene entrada individual");
+        assertTrue(manager.getKnownPlayers().contains(player),
+                "debe figurar como conocido para poder sincronizarlo con la web");
+    }
+
+    @Test
     void dataSurvivesReload(@TempDir Path dir) {
         File file = dir.resolve("players.yml").toFile();
         UUID player = UUID.randomUUID();

@@ -4,10 +4,12 @@ API y panel público para LivesHC. PostgreSQL es una proyección de lectura; `pl
 
 El panel adapta título y skins según el `modo` enviado por el plugin (`solo` o `coop`):
 
-- `solo`: cada jugador conserva sus propias vidas. Con un solo jugador muestra la ficha destacada; con varios (10, 15, 20…) genera una rejilla adaptativa de fichas compactas ordenadas por relevancia (online primero, luego más reciente). El máximo lo controla `MAX_PLAYERS` (por defecto 30).
-- `coop`: muestra automáticamente a los 2 más relevantes con insignia `+`, título "Supervivencia cooperativa".
+- `solo`: cada jugador conserva sus propias vidas. Con un solo jugador muestra la ficha destacada; con varios genera una rejilla adaptativa de fichas compactas ordenadas por relevancia (online primero, luego más reciente).
+- `coop`: muestra todo el equipo. Con dos jugadores mantiene la pareja con insignia `+`; con más pasa a la rejilla adaptativa.
 
-No hay que configurar UUID en la web: el plugin ya envía todos los jugadores en cada snapshot y el backend elige cuántos mostrar. `modo` es solo presentación; `vidas-compartidas` sigue controlando la lógica de vidas (`individual` / `shared`). En cooperativo con vidas compartidas se muestran los dos retratos sin insignia y las vidas individuales se ocultan en favor del contador compartido.
+En ambos modos el bloque "Intento hardcore" muestra el intento actual: `comandos-sin-vidas-ejecutados` + 1 (0 ejecuciones = intento #1). El máximo de jugadores mostrados lo controla `MAX_PLAYERS` (por defecto 30).
+
+No hay que configurar UUID en la web: el plugin ya envía todos los jugadores en cada snapshot y el backend elige cuántos mostrar. `modo` es solo presentación; `vidas-compartidas` sigue controlando la lógica de vidas (`individual` / `shared`). Con vidas compartidas el panel muestra el contador global y oculta las vidas individuales de cada ficha.
 
 ## Dokploy
 

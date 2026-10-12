@@ -94,10 +94,14 @@ public final class WebSnapshotService {
     private String captureAll(boolean resetOnline, boolean shuttingDown) {
         Instant capturedAt = Instant.now();
         Map<UUID, PlayerState> states = new LinkedHashMap<>();
-        for (Map.Entry<UUID, Integer> entry : plugin.getLivesManager().getKnownIndividualLives().entrySet()) {
-            OfflinePlayer offline = Bukkit.getOfflinePlayer(entry.getKey());
-            states.put(entry.getKey(), PlayerState.offline(entry.getKey(), offline.getName(), entry.getValue(),
-                    plugin.getLivesManager().getDeaths(entry.getKey())));
+        // Se incluyen todos los jugadores conocidos, no solo los de vidas individuales: en modo
+        // compartido los jugadores (p. ej. cuentas Floodgate) solo figuran en las muertes y, si no
+        // están online, quedarían fuera de la web para siempre.
+        for (UUID playerId : plugin.getLivesManager().getKnownPlayers()) {
+            OfflinePlayer offline = Bukkit.getOfflinePlayer(playerId);
+            states.put(playerId, PlayerState.offline(playerId, offline.getName(),
+                    plugin.getLivesManager().getLives(playerId, false),
+                    plugin.getLivesManager().getDeaths(playerId)));
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
             states.put(player.getUniqueId(), capturePlayer(player, !shuttingDown, capturedAt));
