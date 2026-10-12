@@ -306,3 +306,23 @@ test('config endpoint exposes head templates', async () => {
   assert.equal(response.body.head3dUrlTemplate, customConfig.HEAD_3D_URL_TEMPLATE);
 });
 
+test('filters out hidden players by UUID or name', async () => {
+  const pool = poolWith({
+    serverRow: serverRow(),
+    playerRows: [
+      playerRow({ uuid: PLAYER_1, name: 'Alex' }),
+      playerRow({ uuid: PLAYER_2, name: 'TestUser' }),
+      playerRow({ uuid: '00000000-0000-0000-0000-000000000003', name: 'BotPlayer' })
+    ]
+  });
+  const customConfig = {
+    ...config,
+    HIDDEN_PLAYERS: [PLAYER_1, 'botplayer']
+  };
+  const response = await request(createApp({ pool, config: customConfig })).get('/api/v1/versus');
+  assert.equal(response.status, 200);
+  assert.equal(response.body.players.length, 1);
+  assert.equal(response.body.players[0].name, 'TestUser');
+});
+
+

@@ -97,7 +97,10 @@ export async function getVersus(pool, config) {
   const limit = config.MAX_PLAYERS ?? 30;
   // Online primero; dentro de cada grupo manda el orden alfabético del nombre. El punto
   // inicial de las cuentas de Bedrock (Floodgate) se ignora al comparar, de modo que
-  // ".AlexCuadro7412" ordena junto a "AlexCuadro7412" y no antes que la "A".
+  const hidden = new Set(config.HIDDEN_PLAYERS ?? []);
+  // Si hay lista de ocultos, leemos un margen adicional en BD para no quedar por debajo de limit
+  const fetchLimit = hidden.size > 0 ? limit + hidden.size : limit;
+
   const playersResult = await pool.query(`
     SELECT uuid, name, individual_lives, deaths,
       play_time_seconds, online, world, dimension, x, y, z,
@@ -108,7 +111,11 @@ export async function getVersus(pool, config) {
     WHERE server_id = $1
     ORDER BY online DESC, LOWER(LTRIM(name, '.')) ASC, updated_at DESC
     LIMIT $2
-  `, [config.SERVER_ID, limit]);
+  `, [config.SERVER_ID, fetchLimit]);
+
+  const visiblePlayerRows = playersResult.rows
+    .filter(row => !hidden.has(row.uuid.toLowerCase()) && !hidden.has((row.name ?? '').toLowerCase()))
+    .slice(0, limit);
 
   const deathsResult = await pool.query(`
     SELECT id, victim, message, killer, created_at
@@ -123,7 +130,7 @@ export async function getVersus(pool, config) {
     noLivesCommandExecutions: Number(serverRow.no_lives_command_executions), capturedAt: serverRow.captured_at };
   return {
     server,
-    players: playersResult.rows.map(row => ({
+    players: visiblePlayerRows.map(row => ({
       uuid: row.uuid, name: row.name, lives: server.livesMode === 'shared' ? server.sharedLives : row.individual_lives,
       deaths: Number(row.deaths ?? 0),
       online: row.online, playTimeSeconds: Number(row.play_time_seconds ?? 0),

@@ -21,6 +21,7 @@ No hay que configurar UUID en la web: el plugin ya envía todos los jugadores en
 4. Exponer solamente el puerto HTTP `3000`. No publicar el puerto de PostgreSQL.
 5. Configurar el health check en `/health`.
 6. Copiar en `plugins/LivesHC/config.yml` la URL HTTPS `/internal/v1/snapshot`, el mismo token y `server-id`, elegir `modo: solo|coop`, activar `web.habilitada` y reiniciar el servidor.
+7. (Opcional) Para ocultar jugadores de prueba, añade en las variables de entorno `HIDDEN_PLAYERS` (o `OCULTAR_JUGADORES` / `OCULTAR_UUID`) con los nombres o UUIDs separados por coma (ej: `HIDDEN_PLAYERS=TestUser,00000000-0000-0000-0000-000000000001`). Se filtran automáticamente tanto del panel web como del overlay de OBS.
 
 El contenedor aplica las migraciones pendientes antes de iniciar Express. Para cambiar las skins se puede usar cualquier URL HTTPS que contenga `{uuid}`.
 
