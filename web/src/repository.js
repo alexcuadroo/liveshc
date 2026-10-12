@@ -41,14 +41,14 @@ export async function saveSnapshot(pool, snapshot) {
           walked_centimeters = COALESCE(EXCLUDED.walked_centimeters, player_snapshots.walked_centimeters),
           blocks_mined = COALESCE(EXCLUDED.blocks_mined, player_snapshots.blocks_mined),
           mob_kills = COALESCE(EXCLUDED.mob_kills, player_snapshots.mob_kills),
-          health = COALESCE(EXCLUDED.health, player_snapshots.health),
-          max_health = COALESCE(EXCLUDED.max_health, player_snapshots.max_health),
-          food_level = COALESCE(EXCLUDED.food_level, player_snapshots.food_level),
-          helmet = COALESCE(EXCLUDED.helmet, player_snapshots.helmet),
-          chestplate = COALESCE(EXCLUDED.chestplate, player_snapshots.chestplate),
-          leggings = COALESCE(EXCLUDED.leggings, player_snapshots.leggings),
-          boots = COALESCE(EXCLUDED.boots, player_snapshots.boots),
-          offhand = COALESCE(EXCLUDED.offhand, player_snapshots.offhand),
+          health = CASE WHEN EXCLUDED.online THEN EXCLUDED.health ELSE COALESCE(EXCLUDED.health, player_snapshots.health) END,
+          max_health = CASE WHEN EXCLUDED.online THEN EXCLUDED.max_health ELSE COALESCE(EXCLUDED.max_health, player_snapshots.max_health) END,
+          food_level = CASE WHEN EXCLUDED.online THEN EXCLUDED.food_level ELSE COALESCE(EXCLUDED.food_level, player_snapshots.food_level) END,
+          helmet = CASE WHEN EXCLUDED.online THEN EXCLUDED.helmet ELSE COALESCE(EXCLUDED.helmet, player_snapshots.helmet) END,
+          chestplate = CASE WHEN EXCLUDED.online THEN EXCLUDED.chestplate ELSE COALESCE(EXCLUDED.chestplate, player_snapshots.chestplate) END,
+          leggings = CASE WHEN EXCLUDED.online THEN EXCLUDED.leggings ELSE COALESCE(EXCLUDED.leggings, player_snapshots.leggings) END,
+          boots = CASE WHEN EXCLUDED.online THEN EXCLUDED.boots ELSE COALESCE(EXCLUDED.boots, player_snapshots.boots) END,
+          offhand = CASE WHEN EXCLUDED.online THEN EXCLUDED.offhand ELSE COALESCE(EXCLUDED.offhand, player_snapshots.offhand) END,
           updated_at = CASE
             WHEN EXCLUDED.online OR player_snapshots.online THEN now()
             ELSE player_snapshots.updated_at
