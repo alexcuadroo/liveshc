@@ -2,6 +2,7 @@ const POLL_INTERVAL = 30_000;
 const state = {
   timer: null,
   skinTemplate: 'https://mc-heads.net/body/{uuid}/180',
+  headTemplate: 'https://mc-heads.net/avatar/{uuid}/64',
   hasData: false,
   radarPlayers: [],
   radarHovered: null,
@@ -131,7 +132,7 @@ function formatExperience(level, totalExperience) {
 }
 
 function formatLastSignal(player) {
-  if (player.online) return 'En línea ahora';
+  if (player.online) return 'Ahora';
   if (!player.lastSeenAt) return '—';
   const seenAt = new Date(player.lastSeenAt);
   if (Number.isNaN(seenAt.getTime())) return '—';
@@ -204,6 +205,8 @@ function formatItemName(raw) {
     .join(' ');
 }
 
+const ICON_HEART = '<svg class="vital-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>';
+const ICON_FOOD = '<svg class="vital-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15.4 15.63a7.875 6 135 1 1 6.23-6.23 4.5 3.43 135 0 0-6.23 6.23"/><path d="m8.29 12.71-2.6 2.6a2.5 2.5 0 1 0-1.65 4.65A2.5 2.5 0 1 0 8.7 18.3l2.59-2.59"/></svg>';
 function vitalsMarkup(player) {
   const hp = player.health != null ? Math.round(player.health * 10) / 10 : null;
   const maxHp = player.maxHealth != null ? Math.round(player.maxHealth * 10) / 10 : 20.0;
@@ -211,21 +214,23 @@ function vitalsMarkup(player) {
 
   const hpPercent = hp != null ? Math.min(100, Math.max(0, (hp / maxHp) * 100)) : 0;
   const foodPercent = food != null ? Math.min(100, Math.max(0, (food / 20) * 100)) : 0;
+  const hpLow = hp != null && hpPercent <= 25 ? ' is-low' : '';
+  const foodLow = food != null && food <= 6 ? ' is-low' : '';
 
   return `
     <div class="vitals-block" aria-label="Estado vital">
-      <div class="vital-row">
+      <div class="vital-row vital-hp${hpLow}">
         <div class="vital-header">
-          <span>♥ Vida</span>
+          <span class="vital-label">${ICON_HEART}<span>Vida</span></span>
           <span class="vital-val">${hp != null ? `${hp} / ${maxHp}` : '—'}</span>
         </div>
         <div class="vital-bar-track">
           <div class="vital-bar-fill hp-fill" style="width: ${hpPercent}%"></div>
         </div>
       </div>
-      <div class="vital-row">
+      <div class="vital-row vital-food${foodLow}">
         <div class="vital-header">
-          <span>🍖 Comida</span>
+          <span class="vital-label">${ICON_FOOD}<span>Comida</span></span>
           <span class="vital-val">${food != null ? `${food} / 20` : '—'}</span>
         </div>
         <div class="vital-bar-track">
@@ -267,14 +272,31 @@ function playerMarkup(player, index) {
   const name = player.name || `Jugador ${index + 1}`;
   const lives = hearts(player.lives);
   const skinUrl = state.skinTemplate.replace('{uuid}', encodeURIComponent(player.uuid));
+  const headUrl = state.headTemplate.replace('{uuid}', encodeURIComponent(player.uuid));
+  const levelChip = player.level != null
+    ? `<span class="skin-chip chip-level" title="Nivel ${formatNumber(player.level)} · ${formatNumber(player.totalExperience)} XP"><small>Nv.</small>${formatNumber(player.level)}</span>`
+    : '';
   return `
     <div class="fighter-inner">
-      <div class="skin-wrap"><img class="skin" src="${escapeHtml(skinUrl)}" alt="Skin de ${escapeHtml(name)}" width="180" height="360"></div>
+      <div class="skin-stage">
+        <span class="stage-index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span>
+        <span class="stage-glow" aria-hidden="true"></span>
+        <span class="skin-cast" aria-hidden="true"></span>
+        <figure class="skin-figure">
+          <img class="skin" src="${escapeHtml(skinUrl)}" alt="Skin de ${escapeHtml(name)}" width="180" height="360">
+          <img class="skin-reflection" src="${escapeHtml(skinUrl)}" alt="" aria-hidden="true" width="180" height="360">
+        </figure>
+        <div class="skin-chips">${levelChip}</div>
+        <span class="skin-dot ${player.online ? 'is-online' : ''}" title="${player.online ? 'En línea' : 'Desconectado'}" aria-hidden="true"></span>
+      </div>
       <div class="stats">
         <div class="player-head">
-          <div class="player-identity">
-            <div class="status ${player.online ? 'is-online' : ''}">${player.online ? 'En línea' : 'Desconectado'}</div>
-            <h3 class="player-name">${escapeHtml(name)}</h3>
+          <div class="player-id">
+            <img class="player-avatar" src="${escapeHtml(headUrl)}" alt="" aria-hidden="true" width="40" height="40">
+            <div class="player-identity">
+              <div class="status ${player.online ? 'is-online' : ''}">${player.online ? 'En línea' : 'Desconectado'}</div>
+              <h3 class="player-name">${escapeHtml(name)}</h3>
+            </div>
           </div>
           ${deathsBadge(player.deaths)}
         </div>
@@ -302,7 +324,14 @@ function playerMarkup(player, index) {
 function placeholderMarkup() {
   return `
     <div class="fighter-inner">
-      <div class="skin-wrap"><img class="skin" src="${fallbackSkin}" alt="Sin jugador todavía" width="180" height="360"></div>
+      <div class="skin-stage">
+        <span class="stage-glow" aria-hidden="true"></span>
+        <span class="skin-cast" aria-hidden="true"></span>
+        <figure class="skin-figure">
+          <img class="skin" src="${fallbackSkin}" alt="Sin jugador todavía" width="180" height="360">
+        </figure>
+        <span class="skin-dot" aria-hidden="true"></span>
+      </div>
       <div class="stats">
         <div class="player-head">
           <div class="player-identity">
@@ -319,7 +348,7 @@ function placeholderMarkup() {
 }
 
 function skeletonMarkup() {
-  return '<div class="fighter-inner"><div class="skin-wrap"></div><div><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>';
+  return '<div class="fighter-inner"><div class="skin-stage"><span class="stage-glow"></span><figure class="skin-figure"></figure></div><div><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div></div>';
 }
 
 function createFighter(player, index, { skeleton = false } = {}) {
@@ -329,10 +358,14 @@ function createFighter(player, index, { skeleton = false } = {}) {
   article.dataset.number = String(index + 1).padStart(2, '0');
   article.setAttribute('aria-busy', 'false');
   article.classList.toggle('skeleton', skeleton);
+  if (player) article.classList.toggle('is-offline', !player.online);
   article.innerHTML = skeleton ? skeletonMarkup() : player ? playerMarkup(player, index) : placeholderMarkup();
-  const image = article.querySelector('img');
-  if (image && !skeleton) {
-    image.addEventListener('error', event => { event.currentTarget.src = fallbackSkin; }, { once: true });
+  if (!skeleton) {
+    for (const image of article.querySelectorAll('img.skin, img.skin-reflection')) {
+      image.addEventListener('error', () => { image.src = fallbackSkin; }, { once: true });
+    }
+    const avatar = article.querySelector('.player-avatar');
+    if (avatar) avatar.addEventListener('error', () => avatar.remove(), { once: true });
   }
   return article;
 }
@@ -839,6 +872,7 @@ setupRadar();
 
 fetch('/api/v1/config').then(response => response.ok ? response.json() : null).then(config => {
   if (config?.skinUrlTemplate?.includes('{uuid}')) state.skinTemplate = config.skinUrlTemplate;
+  if (config?.headUrlTemplate?.includes('{uuid}')) state.headTemplate = config.headUrlTemplate;
   renderServerAddress(config?.serverAddress);
 }).finally(refresh);
 document.addEventListener('visibilitychange', () => {
