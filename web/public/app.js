@@ -1,9 +1,15 @@
 const POLL_INTERVAL = 30_000;
-const state = { timer: null, skinTemplate: 'https://mc-heads.net/body/{uuid}/180', hasData: false };
+const state = {
+  timer: null,
+  skinTemplate: 'https://mc-heads.net/body/{uuid}/180',
+  hasData: false,
+  radarPlayers: [],
+  radarHovered: null
+};
 const fallbackSkin = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 360"><path fill="#241b18" d="M0 0h180v360H0z"/><path fill="#66564f" d="M52 25h76v76H52z"/><path fill="#4b3d38" d="M40 108h100v126H40z"/><path fill="#66564f" d="M18 112h24v146H18zm120 0h24v146h-24zM45 234h38v116H45zm52 0h38v116H97z"/></svg>')}`;
 
 function escapeHtml(value) {
-  return String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
+  return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 }
 
 function formatDuration(seconds) {
@@ -95,6 +101,74 @@ function deathsBlock(value) {
         </div>`;
 }
 
+function formatItemName(raw) {
+  if (!raw) return 'Vacío';
+  return raw
+    .toLowerCase()
+    .replace(/^minecraft:/, '')
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function vitalsMarkup(player) {
+  const hp = player.health != null ? Math.round(player.health * 10) / 10 : null;
+  const maxHp = player.maxHealth != null ? Math.round(player.maxHealth * 10) / 10 : 20.0;
+  const food = player.foodLevel != null ? player.foodLevel : null;
+
+  const hpPercent = hp != null ? Math.min(100, Math.max(0, (hp / maxHp) * 100)) : 0;
+  const foodPercent = food != null ? Math.min(100, Math.max(0, (food / 20) * 100)) : 0;
+
+  return `
+    <div class="vitals-block" aria-label="Estado vital">
+      <div class="vital-row">
+        <div class="vital-header">
+          <span>♥ Vida</span>
+          <span class="vital-val">${hp != null ? `${hp} / ${maxHp}` : '—'}</span>
+        </div>
+        <div class="vital-bar-track">
+          <div class="vital-bar-fill hp-fill" style="width: ${hpPercent}%"></div>
+        </div>
+      </div>
+      <div class="vital-row">
+        <div class="vital-header">
+          <span>🍖 Comida</span>
+          <span class="vital-val">${food != null ? `${food} / 20` : '—'}</span>
+        </div>
+        <div class="vital-bar-track">
+          <div class="vital-bar-fill food-fill" style="width: ${foodPercent}%"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function equipmentMarkup(equipment = {}) {
+  const slots = [
+    { key: 'helmet', label: 'Casco', icon: '🪖' },
+    { key: 'chestplate', label: 'Peto', icon: '🛡️' },
+    { key: 'leggings', label: 'Grebas', icon: '👖' },
+    { key: 'boots', label: 'Botas', icon: '🥾' },
+    { key: 'offhand', label: 'Secundaria', icon: '✋' }
+  ];
+
+  const rendered = slots.map(slot => {
+    const item = equipment[slot.key];
+    const hasItem = Boolean(item);
+    const title = `${slot.label}: ${formatItemName(item)}`;
+    return `
+      <div class="eq-slot ${hasItem ? 'has-item' : 'empty-item'}" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}">
+        <span class="eq-icon">${slot.icon}</span>
+        <span class="eq-name">${escapeHtml(hasItem ? formatItemName(item) : '—')}</span>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="equipment-block">
+      <div class="equipment-label">Equipamiento activo</div>
+      <div class="equipment-slots">${rendered}</div>
+    </div>`;
+}
+
 function playerMarkup(player, index) {
   const location = formatLocation(player.location);
   const name = player.name || `Jugador ${index + 1}`;
@@ -110,6 +184,8 @@ function playerMarkup(player, index) {
           ${livesBlock({ text: lives.text, empty: lives.empty, label: lives.label })}
           ${deathsBlock(player.deaths)}
         </div>
+        ${vitalsMarkup(player)}
+        ${equipmentMarkup(player.equipment)}
         <dl class="meta">
           <div><dt>Tiempo jugado</dt><dd>${formatDuration(player.playTimeSeconds)}</dd></div>
           <div><dt>Dimensión</dt><dd>${escapeHtml(location.dimension)}</dd></div>
@@ -172,8 +248,6 @@ function createVersus() {
 function renderArena(roster, mode, shared) {
   const arena = document.querySelector('#arena');
   const solo = mode === 'solo';
-  // `solo` destaca un jugador; `coop` conserva la pareja clásica y pasa a rejilla
-  // cuando el equipo supera los dos jugadores.
   const many = roster.length > (solo ? 1 : 2);
   const showVersus = !solo && !shared && roster.length === 2;
 
@@ -253,9 +327,6 @@ function renderDisplayMode(mode, count) {
 }
 
 function renderMatchStatus(mode) {
-  // En modo solo el contador global de intentos no aporta: cada ficha ya muestra
-  // las vidas y muertes de su jugador. Se oculta el bloque (y el panel contenedor
-  // si no queda nada más visible, como en coop sin vidas compartidas).
   const attempt = document.querySelector('.attempt-record');
   const shared = document.querySelector('#shared-lives');
   attempt.hidden = mode === 'solo';
@@ -263,14 +334,265 @@ function renderMatchStatus(mode) {
 }
 
 function renderAttemptRecord(server) {
-  // `comandos-sin-vidas-ejecutados` cuenta las veces que se agotaron las vidas: con 0
-  // ejecuciones se está jugando el intento #1.
   const executions = server?.noLivesCommandExecutions;
   const attempt = Number.isSafeInteger(executions) ? executions + 1 : null;
   document.querySelector('#attempt-number').value = attempt ?? '—';
   document.querySelector('#attempt-number').textContent = attempt === null
     ? '—'
     : new Intl.NumberFormat('es').format(attempt);
+}
+
+function renderRecentDeaths(recentDeaths = []) {
+  const consoleEl = document.querySelector('#deaths-console');
+  if (!consoleEl) return;
+  if (!recentDeaths.length) {
+    consoleEl.innerHTML = '<div class="console-empty">Sin muertes registradas</div>';
+    return;
+  }
+
+  const entries = recentDeaths.map(death => {
+    const time = death.createdAt
+      ? new Date(death.createdAt).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      : '—';
+    return `
+      <div class="console-entry">
+        <div class="console-entry-header">
+          <span class="console-victim">${escapeHtml(death.victim)}</span>
+          <time class="console-time">${escapeHtml(time)}</time>
+        </div>
+        <div class="console-msg">${escapeHtml(death.message)}</div>
+      </div>`;
+  }).join('');
+
+  consoleEl.innerHTML = entries;
+}
+
+const PLAYER_COLORS = [
+  '#7bc96f', '#38bdf8', '#fbbf24', '#f43f5e',
+  '#a855f7', '#fb923c', '#4ade80', '#e879f9'
+];
+
+function setupRadar() {
+  const canvas = document.querySelector('#radar-canvas');
+  const tooltip = document.querySelector('#radar-tooltip');
+  if (!canvas || !tooltip) return;
+
+  canvas.addEventListener('mousemove', event => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / (rect.width || 1);
+    const scaleY = canvas.height / (rect.height || 1);
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
+
+    let closest = null;
+    let minDist = 18; // px threshold in canvas units
+    state.radarPlayers.forEach(p => {
+      const d = Math.hypot(p.canvasX - x, p.canvasY - y);
+      if (d < minDist) {
+        minDist = d;
+        closest = p;
+      }
+    });
+
+    state.radarHovered = closest;
+    if (closest) {
+      const otherDistances = state.radarPlayers
+        .filter(other => other !== closest && other.location)
+        .map(other => {
+          const dx = closest.location.x - other.location.x;
+          const dz = closest.location.z - other.location.z;
+          const distBlocks = Math.round(Math.hypot(dx, dz));
+          return `→ ${other.name}: ${distBlocks}m`;
+        });
+
+      const distText = otherDistances.length ? `\n${otherDistances.join('\n')}` : '';
+      tooltip.textContent = `${closest.name} (X: ${Math.round(closest.location.x)}, Z: ${Math.round(closest.location.z)})${distText}`;
+      const containerRect = canvas.parentElement.getBoundingClientRect();
+      const cssX = (rect.left - containerRect.left) + (closest.canvasX / scaleX);
+      const cssY = (rect.top - containerRect.top) + (closest.canvasY / scaleY);
+      tooltip.style.left = `${cssX}px`;
+      tooltip.style.top = `${cssY}px`;
+      tooltip.hidden = false;
+    } else {
+      tooltip.hidden = true;
+    }
+    drawRadar();
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    state.radarHovered = null;
+    tooltip.hidden = true;
+    drawRadar();
+  });
+}
+
+function renderRadar(players) {
+  const onlineWithCoords = players.filter(p => p.online && p.location && p.location.x != null && p.location.z != null);
+  const legend = document.querySelector('#radar-legend');
+
+  state.radarPlayers = onlineWithCoords.map((p, idx) => ({
+    ...p,
+    color: PLAYER_COLORS[idx % PLAYER_COLORS.length]
+  }));
+
+  if (legend) {
+    if (!state.radarPlayers.length) {
+      legend.innerHTML = '<span class="console-empty" style="padding:0">Sin jugadores en línea</span>';
+    } else {
+      legend.innerHTML = state.radarPlayers.map(p => `
+        <div class="radar-legend-item">
+          <span class="radar-legend-dot" style="background:${p.color}"></span>
+          <span>${escapeHtml(p.name)}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  drawRadar();
+}
+
+function drawRadar() {
+  const canvas = document.querySelector('#radar-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(centerX, centerY) - 15;
+
+  ctx.clearRect(0, 0, width, height);
+
+  // Background circular grid
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.fillStyle = '#140e0c';
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#483833';
+  ctx.stroke();
+
+  // Concentric radar rings
+  [0.33, 0.66, 1].forEach(ratio => {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius * ratio, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(216, 58, 46, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.stroke();
+  });
+
+  // Crosshairs
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY - radius);
+  ctx.lineTo(centerX, centerY + radius);
+  ctx.moveTo(centerX - radius, centerY);
+  ctx.lineTo(centerX + radius, centerY);
+  ctx.strokeStyle = 'rgba(72, 56, 51, 0.6)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Radar sweep line decorative effect
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.arc(centerX, centerY, radius, -Math.PI / 4, 0);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(216, 58, 46, 0.05)';
+  ctx.fill();
+
+  ctx.restore();
+
+  const players = state.radarPlayers;
+  if (!players.length) {
+    ctx.fillStyle = '#a99e91';
+    ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Sin señal de jugadores', centerX, centerY + 4);
+    return;
+  }
+
+  // Calculate center of group
+  let avgX = 0;
+  let avgZ = 0;
+  players.forEach(p => {
+    avgX += p.location.x;
+    avgZ += p.location.z;
+  });
+  avgX /= players.length;
+  avgZ /= players.length;
+
+  let maxDelta = 100; // minimum scale in blocks
+  players.forEach(p => {
+    const dx = Math.abs(p.location.x - avgX);
+    const dz = Math.abs(p.location.z - avgZ);
+    maxDelta = Math.max(maxDelta, dx, dz);
+  });
+  const scale = (radius * 0.8) / maxDelta;
+
+  // Project players to canvas coordinates
+  players.forEach(p => {
+    p.canvasX = centerX + (p.location.x - avgX) * scale;
+    p.canvasY = centerY + (p.location.z - avgZ) * scale; // Minecraft Z is South (down)
+  });
+
+  // If hovered, draw distance connection lines to all other players
+  if (state.radarHovered) {
+    const h = state.radarHovered;
+    players.forEach(other => {
+      if (other !== h) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(h.canvasX, h.canvasY);
+        ctx.lineTo(other.canvasX, other.canvasY);
+        ctx.strokeStyle = 'rgba(216, 58, 46, 0.65)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+
+        // Distance label along mid-line
+        const midX = (h.canvasX + other.canvasX) / 2;
+        const midY = (h.canvasY + other.canvasY) / 2;
+        const dist = Math.round(Math.hypot(h.location.x - other.location.x, h.location.z - other.location.z));
+
+        ctx.fillStyle = '#f4eadb';
+        ctx.font = '9px "IBM Plex Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${dist}m`, midX, midY - 3);
+        ctx.restore();
+      }
+    });
+  }
+
+  // Draw player blips
+  players.forEach(p => {
+    const isHovered = state.radarHovered === p;
+    ctx.save();
+
+    // Pulse / glow ring
+    ctx.beginPath();
+    ctx.arc(p.canvasX, p.canvasY, isHovered ? 10 : 7, 0, Math.PI * 2);
+    ctx.fillStyle = isHovered ? 'rgba(216, 58, 46, 0.35)' : 'rgba(255, 255, 255, 0.15)';
+    ctx.fill();
+
+    // Blip center
+    ctx.beginPath();
+    ctx.arc(p.canvasX, p.canvasY, isHovered ? 5 : 4, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+    ctx.strokeStyle = '#120d0c';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#f4eadb';
+    ctx.font = '10px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(p.name, p.canvasX, p.canvasY - 9);
+
+    ctx.restore();
+  });
 }
 
 async function copyText(value) {
@@ -331,6 +653,7 @@ async function refresh() {
     const mode = server?.displayMode ?? 'coop';
     const shared = server?.livesMode === 'shared';
     const players = Array.isArray(data.players) ? data.players : [];
+    const recentDeaths = Array.isArray(data.recentDeaths) ? data.recentDeaths : [];
 
     renderAttemptRecord(server);
     renderLivesMode(server);
@@ -341,6 +664,8 @@ async function refresh() {
       ? (players.length ? players : [null])
       : (players.length > 1 ? players : [players[0] ?? null, players[1] ?? null]);
     renderArena(roster, mode, shared);
+    renderRecentDeaths(recentDeaths);
+    renderRadar(players);
 
     state.hasData = true;
     document.querySelector('#last-update').textContent = `Actualizado ${new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}`;
@@ -360,6 +685,8 @@ document.querySelector('#arena').replaceChildren(
   createVersus(),
   createFighter(null, 1, { skeleton: true })
 );
+
+setupRadar();
 
 fetch('/api/v1/config').then(response => response.ok ? response.json() : null).then(config => {
   if (config?.skinUrlTemplate?.includes('{uuid}')) state.skinTemplate = config.skinUrlTemplate;

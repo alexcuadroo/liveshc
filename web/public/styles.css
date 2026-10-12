@@ -77,7 +77,7 @@ footer {
 .brand { font-family: "Barlow Condensed", sans-serif; font-size: 1.25rem; font-weight: 800; letter-spacing: .06em; }
 .brand-mark { color: var(--blood); margin-right: .4rem; }
 
-main { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(1.5rem, 4vw, 3rem) 0 2rem; }
+main { width: min(1480px, calc(100% - 2rem)); margin: 0 auto; padding: clamp(1.5rem, 4vw, 3rem) 0 2rem; }
 .eyebrow { color: var(--blood); text-transform: uppercase; letter-spacing: .18em; font-size: .75rem; font-weight: 600; text-align: center; }
 h1 { margin: .65rem auto clamp(2rem, 5vw, 4rem); text-align: center; text-transform: uppercase; font: 800 clamp(2.7rem, 8vw, 6.8rem)/.82 "Barlow Condensed", sans-serif; letter-spacing: -.035em; }
 h1 em { color: transparent; -webkit-text-stroke: 1px var(--muted); font-style: italic; }
@@ -138,6 +138,22 @@ main[data-display-mode="solo"] .match-status { width: min(44rem, 100%); grid-tem
 .shared-lives h2 { margin: .08rem 0 0; font: 800 clamp(1.55rem, 3.8cqi, 2.35rem)/.95 "Barlow Condensed", sans-serif; text-transform: uppercase; }
 .shared-count { position: relative; z-index: 1; flex: 0 0 auto; margin-inline-start: auto; color: var(--ink); font: 800 clamp(4rem, 8cqi, 6.5rem)/.72 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
 .shared-hearts { min-height: 1rem; margin-top: .42rem; color: var(--blood); letter-spacing: .22rem; text-shadow: 0 .12rem 0 var(--blood-dark); }
+
+/* Dashboard layout (Arena principal + Sidebar a la derecha) */
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 1.75rem;
+  align-items: start;
+}
+.roster { min-width: 0; }
+.dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
 .arena.shared-mode { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
 .arena.shared-mode .individual-lives { display: none; }
 .arena.solo-mode { grid-template-columns: minmax(0, 1fr); max-width: 44rem; margin-inline: auto; }
@@ -146,7 +162,7 @@ main[data-display-mode="solo"] .match-status { width: min(44rem, 100%); grid-tem
 
 /* Muchos jugadores en modo solo: rejilla adaptativa de fichas compactas. */
 .arena.grid-mode {
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
   gap: 1rem;
   max-width: none;
   margin-inline: 0;
@@ -170,12 +186,8 @@ main .arena.grid-mode .fighter-inner > * { direction: ltr; }
 .arena.grid-mode .meta { gap: .7rem; }
 .arena.grid-mode .survival { margin-top: 1rem; }
 
-@media (max-width: 480px) {
-  .arena.grid-mode { grid-template-columns: 1fr; }
-}
-
 .arena { display: grid; grid-template-columns: minmax(0, 1fr) clamp(4rem, 9vw, 7rem) minmax(0, 1fr); align-items: stretch; }
-.fighter { position: relative; min-height: 470px; border: 1px solid var(--line); background: linear-gradient(145deg, rgba(255,255,255,.035), transparent 45%), var(--panel); overflow: hidden; container-type: inline-size; }
+.fighter { position: relative; min-height: 520px; border: 1px solid var(--line); background: linear-gradient(145deg, rgba(255,255,255,.035), transparent 45%), var(--panel); overflow: hidden; container-type: inline-size; }
 .fighter::before { content: attr(data-number); position: absolute; top: -.18em; color: rgba(244,234,219,.035); font: 800 13rem/1 "Barlow Condensed", sans-serif; }
 .fighter-one::before { left: -.05em; }
 .fighter-two::before { right: -.05em; }
@@ -189,16 +201,89 @@ main .arena.grid-mode .fighter-inner > * { direction: ltr; }
 .status::before { content: ""; width: .45rem; height: .45rem; border-radius: 50%; background: var(--muted); }
 .status.is-online { color: var(--alive); }
 .status.is-online::before { background: var(--alive); }
-.player-name { overflow-wrap: anywhere; margin: 0 0 1.4rem; font: 800 clamp(2rem, 5cqw, 4rem)/.85 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+.player-name { overflow-wrap: anywhere; margin: 0 0 1rem; font: 800 clamp(2rem, 5cqw, 3.6rem)/.85 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+
+/* Vitals: HP y Food */
+.vitals-block {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  margin: 0 0 1rem;
+  padding: .65rem .8rem;
+  background: rgba(0, 0, 0, .25);
+  border: 1px solid rgba(72, 56, 51, .6);
+}
+.vital-row { display: flex; flex-direction: column; gap: .2rem; }
+.vital-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.vital-header .vital-val { color: var(--ink); font-weight: 700; font-family: "Barlow Condensed", sans-serif; font-size: .85rem; }
+.vital-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, .08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.vital-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .3s ease;
+}
+.vital-bar-fill.hp-fill { background: linear-gradient(90deg, #b3251c, #e03b2e); }
+.vital-bar-fill.food-fill { background: linear-gradient(90deg, #c78328, #f5a623); }
+
+/* Equipamiento activo */
+.equipment-block {
+  margin: 0 0 1rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--line);
+}
+.equipment-label {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: .58rem;
+  margin-bottom: .4rem;
+}
+.equipment-slots {
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+}
+.eq-slot {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .2rem .45rem;
+  background: rgba(0, 0, 0, .3);
+  border: 1px solid var(--line);
+  font-size: .62rem;
+  font-weight: 500;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.eq-slot.has-item { border-color: rgba(216, 58, 46, .45); color: var(--ink); }
+.eq-slot.empty-item { color: rgba(169, 158, 145, .45); }
+.eq-icon { font-size: .75rem; }
+.eq-name { font-size: .62rem; letter-spacing: .02em; }
+
 .lives-label, .meta dt { color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: .62rem; }
-.hearts { display: flex; flex-wrap: wrap; gap: .3rem; min-height: 2.3rem; margin: .25rem 0 1.5rem; color: var(--blood); font-size: clamp(1.4rem, 4cqw, 2rem); text-shadow: 0 .15rem 0 var(--blood-dark); }
+.hearts { display: flex; flex-wrap: wrap; gap: .3rem; min-height: 2.3rem; margin: .25rem 0 1rem; color: var(--blood); font-size: clamp(1.4rem, 4cqw, 2rem); text-shadow: 0 .15rem 0 var(--blood-dark); }
 .hearts.empty { color: var(--muted); font: 700 1.2rem "Barlow Condensed", sans-serif; text-shadow: none; }
-.individual-lives { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .2rem 2rem; }
+.individual-lives { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .2rem 2rem; margin-bottom: .6rem; }
 .lives-block, .deaths-block { min-width: 0; }
 .deaths-count { color: var(--ink); font: italic 800 clamp(1.6rem, 4cqw, 2.4rem)/1.15 "Barlow Condensed", sans-serif; text-shadow: .04em .04em 0 var(--blood-dark); }
-.meta { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem .7rem; margin: 0; }
-.meta div { min-width: 0; border-top: 1px solid var(--line); padding-top: .55rem; }
-.meta dt { margin-bottom: .25rem; }
+.meta { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem .7rem; margin: 0; }
+.meta div { min-width: 0; border-top: 1px solid var(--line); padding-top: .45rem; }
+.meta dt { margin-bottom: .2rem; }
 .meta dd { margin: 0; font-size: clamp(.72rem, 2.6cqw, .9rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .meta .coordinates { grid-column: 1 / -1; }
 .meta .coordinates dd {
@@ -208,7 +293,7 @@ main .arena.grid-mode .fighter-inner > * { direction: ltr; }
   font-weight: 600;
   letter-spacing: .015em;
 }
-.survival { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; margin-top: 1.25rem; padding-top: .9rem; border-top: 1px solid var(--blood-dark); }
+.survival { display: grid; grid-template-columns: 1fr 1fr; gap: .65rem; margin-top: 1rem; padding-top: .8rem; border-top: 1px solid var(--blood-dark); }
 .survival div { min-width: 0; }
 .survival span { display: block; margin-bottom: .2rem; color: var(--blood); font-size: .56rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
 .survival strong { display: block; overflow: hidden; color: var(--ink); font-size: clamp(.72rem, 2.6cqw, .9rem); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
@@ -218,6 +303,107 @@ main .arena.grid-mode .fighter-inner > * { direction: ltr; }
 .versus.is-coop { font-style: normal; }
 .versus.is-coop span { color: var(--ink); }
 .versus.is-coop span:last-child { margin-left: 0; }
+
+/* Sidebar Cards: Radar y Consola */
+.radar-card, .deaths-console-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 1rem 3rem rgba(0,0,0,.25);
+  display: flex;
+  flex-direction: column;
+}
+.card-header {
+  padding: .85rem 1rem;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(216, 58, 46, .08), transparent);
+}
+.card-kicker { display: block; color: var(--blood); font-size: .58rem; text-transform: uppercase; letter-spacing: .14em; font-weight: 600; }
+.card-title { margin: .15rem 0 0; font: 800 1.25rem/1 "Barlow Condensed", sans-serif; text-transform: uppercase; }
+
+/* Radar */
+.radar-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 340px;
+  margin: 0 auto;
+  padding: .5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#radar-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+.radar-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 10;
+  background: rgba(18, 13, 12, .95);
+  border: 1px solid var(--blood);
+  padding: .4rem .6rem;
+  font-size: .65rem;
+  line-height: 1.35;
+  color: var(--ink);
+  box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .5);
+  transform: translate(-50%, -120%);
+  white-space: pre-line;
+}
+.radar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .7rem;
+  padding: .5rem 1rem .85rem;
+  border-top: 1px solid rgba(72, 56, 51, .5);
+  font-size: .62rem;
+  color: var(--muted);
+}
+.radar-legend-item { display: inline-flex; align-items: center; gap: .35rem; }
+.radar-legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* Consola de muertes */
+.deaths-console-card {
+  max-height: 380px;
+}
+.console-body {
+  padding: .75rem;
+  overflow-y: auto;
+  max-height: 290px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: .68rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  background: rgba(10, 7, 6, .6);
+}
+.console-body::-webkit-scrollbar { width: 6px; }
+.console-body::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
+.console-body::-webkit-scrollbar-track { background: var(--coal); }
+
+.console-entry {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  padding: .45rem .6rem;
+  border-left: 2px solid var(--blood);
+  background: rgba(255, 255, 255, .02);
+  transition: background .15s ease;
+}
+.console-entry:hover { background: rgba(216, 58, 46, .08); }
+.console-entry-header {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: .56rem;
+}
+.console-victim { color: var(--ink); font-weight: 600; }
+.console-msg { color: var(--ink); word-break: break-word; line-height: 1.35; }
+.console-msg em { color: var(--blood); font-style: normal; font-weight: 600; }
+.console-empty { color: var(--muted); text-align: center; padding: 1.5rem 0; font-size: .7rem; }
+
 .privacy-note { margin: 1.5rem auto 0; max-width: 50rem; color: var(--muted); text-align: center; font-size: .7rem; line-height: 1.6; }
 footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; color: var(--muted); }
 .footer-branding { display: flex; flex-wrap: wrap; align-items: safe center; gap: 1rem; }
@@ -250,6 +436,16 @@ footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; 
 @keyframes breathe { to { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms!important; animation-iteration-count: 1!important; scroll-behavior: auto!important; } }
 
+@media (max-width: 1080px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-sidebar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
 @media (max-width: 760px) {
   .match-status { grid-template-columns: 1fr; }
   .shared-lives { border-top: 1px solid var(--line); border-left: 0; }
@@ -261,6 +457,7 @@ footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; 
   .versus { width: 4.5rem; margin: -1.25rem auto; aspect-ratio: 1; }
   .fighter-two .fighter-inner { direction: ltr; }
   footer { align-items: flex-start; flex-direction: column; }
+  .dashboard-sidebar { grid-template-columns: 1fr; }
 }
 
 @container match-status (max-width: 430px) {

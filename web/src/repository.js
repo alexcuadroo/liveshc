@@ -18,12 +18,13 @@ export async function saveSnapshot(pool, snapshot) {
     }
 
     for (const player of snapshot.players) {
+      const eq = player.equipment ?? {};
       await client.query(`
         INSERT INTO player_snapshots
           (server_id, uuid, name, individual_lives, deaths, play_time_seconds, online, world, dimension,
            x, y, z, last_seen_at, experience_level, total_experience, walked_centimeters, blocks_mined,
-           mob_kills, updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::timestamptz,$14,$15,$16,$17,$18,now())
+           mob_kills, health, max_health, food_level, helmet, chestplate, leggings, boots, offhand, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::timestamptz,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,now())
         ON CONFLICT (server_id, uuid) DO UPDATE SET
           name = COALESCE(EXCLUDED.name, player_snapshots.name),
           individual_lives = EXCLUDED.individual_lives,
@@ -40,13 +41,39 @@ export async function saveSnapshot(pool, snapshot) {
           walked_centimeters = COALESCE(EXCLUDED.walked_centimeters, player_snapshots.walked_centimeters),
           blocks_mined = COALESCE(EXCLUDED.blocks_mined, player_snapshots.blocks_mined),
           mob_kills = COALESCE(EXCLUDED.mob_kills, player_snapshots.mob_kills),
+          health = COALESCE(EXCLUDED.health, player_snapshots.health),
+          max_health = COALESCE(EXCLUDED.max_health, player_snapshots.max_health),
+          food_level = COALESCE(EXCLUDED.food_level, player_snapshots.food_level),
+          helmet = COALESCE(EXCLUDED.helmet, player_snapshots.helmet),
+          chestplate = COALESCE(EXCLUDED.chestplate, player_snapshots.chestplate),
+          leggings = COALESCE(EXCLUDED.leggings, player_snapshots.leggings),
+          boots = COALESCE(EXCLUDED.boots, player_snapshots.boots),
+          offhand = COALESCE(EXCLUDED.offhand, player_snapshots.offhand),
           updated_at = CASE
             WHEN EXCLUDED.online OR player_snapshots.online THEN now()
             ELSE player_snapshots.updated_at
           END
       `, [snapshot.serverId, player.uuid, player.name, player.individualLives, player.deaths, player.playTimeSeconds,
         player.online, player.world, player.dimension, player.x, player.y, player.z, player.lastSeenAt,
-        player.level, player.totalExperience, player.walkedCentimeters, player.blocksMined, player.mobKills]);
+        player.level, player.totalExperience, player.walkedCentimeters, player.blocksMined, player.mobKills,
+        player.health ?? null, player.maxHealth ?? null, player.foodLevel ?? null,
+        eq.helmet ?? null, eq.chestplate ?? null, eq.leggings ?? null, eq.boots ?? null, eq.offhand ?? null]);
+    }
+
+    if (Array.isArray(snapshot.recentDeaths) && snapshot.recentDeaths.length > 0) {
+      for (const death of snapshot.recentDeaths) {
+        await client.query(`
+          INSERT INTO death_events (server_id, victim, message, killer, created_at)
+          VALUES ($1, $2, $3, $4, $5::timestamptz)
+        `, [snapshot.serverId, death.victim, death.message, death.killer ?? null, death.timestamp]);
+      }
+      // Retener como máximo 100 eventos por servidor
+      await client.query(`
+        DELETE FROM death_events
+        WHERE server_id = $1 AND id NOT IN (
+          SELECT id FROM death_events WHERE server_id = $1 ORDER BY created_at DESC LIMIT 100
+        )
+      `, [snapshot.serverId]);
     }
     await client.query('COMMIT');
   } catch (error) {
@@ -63,7 +90,7 @@ export async function getVersus(pool, config) {
     FROM servers WHERE id = $1
   `, [config.SERVER_ID]);
   const serverRow = serverResult.rows[0];
-  if (!serverRow) return { server: null, players: [] };
+  if (!serverRow) return { server: null, players: [], recentDeaths: [] };
 
   // Ambos modos muestran hasta `MAX_PLAYERS` jugadores; `solo` y `coop` solo cambian la
   // presentación (títulos, insignia de equipo y contador de vidas compartidas).
@@ -75,12 +102,21 @@ export async function getVersus(pool, config) {
     SELECT uuid, name, individual_lives, deaths,
       play_time_seconds, online, world, dimension, x, y, z,
       experience_level, total_experience, walked_centimeters, blocks_mined, mob_kills,
+      health, max_health, food_level, helmet, chestplate, leggings, boots, offhand,
       last_seen_at, updated_at
     FROM player_snapshots
     WHERE server_id = $1
     ORDER BY online DESC, LOWER(LTRIM(name, '.')) ASC, updated_at DESC
     LIMIT $2
   `, [config.SERVER_ID, limit]);
+
+  const deathsResult = await pool.query(`
+    SELECT id, victim, message, killer, created_at
+    FROM death_events
+    WHERE server_id = $1
+    ORDER BY created_at DESC, id DESC
+    LIMIT 30
+  `, [config.SERVER_ID]);
 
   const server = { id: serverRow.id, livesMode: serverRow.lives_mode, sharedLives: serverRow.shared_lives,
     displayMode: serverRow.display_mode,
@@ -96,9 +132,26 @@ export async function getVersus(pool, config) {
       walkedCentimeters: row.walked_centimeters == null ? null : Number(row.walked_centimeters),
       blocksMined: row.blocks_mined == null ? null : Number(row.blocks_mined),
       mobKills: row.mob_kills == null ? null : Number(row.mob_kills),
+      health: row.health == null ? null : Number(row.health),
+      maxHealth: row.max_health == null ? null : Number(row.max_health),
+      foodLevel: row.food_level == null ? null : Number(row.food_level),
+      equipment: {
+        helmet: row.helmet ?? null,
+        chestplate: row.chestplate ?? null,
+        leggings: row.leggings ?? null,
+        boots: row.boots ?? null,
+        offhand: row.offhand ?? null
+      },
       location: row.x === null ? null : { world: row.world, dimension: row.dimension,
         x: row.x, y: row.y, z: row.z },
       lastSeenAt: row.last_seen_at, updatedAt: row.updated_at
+    })),
+    recentDeaths: deathsResult.rows.map(row => ({
+      id: row.id,
+      victim: row.victim,
+      message: row.message,
+      killer: row.killer,
+      createdAt: row.created_at
     }))
   };
 }

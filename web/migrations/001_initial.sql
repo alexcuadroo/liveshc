@@ -27,9 +27,27 @@ CREATE TABLE IF NOT EXISTS player_snapshots (
     walked_centimeters bigint CHECK (walked_centimeters IS NULL OR walked_centimeters >= 0),
     blocks_mined bigint CHECK (blocks_mined IS NULL OR blocks_mined >= 0),
     mob_kills bigint CHECK (mob_kills IS NULL OR mob_kills >= 0),
+    health double precision CHECK (health IS NULL OR health >= 0),
+    max_health double precision CHECK (max_health IS NULL OR max_health >= 0),
+    food_level integer CHECK (food_level IS NULL OR food_level >= 0),
+    helmet text,
+    chestplate text,
+    leggings text,
+    boots text,
+    offhand text,
     updated_at timestamptz NOT NULL DEFAULT now(),
     PRIMARY KEY (server_id, uuid)
 );
 
+CREATE TABLE IF NOT EXISTS death_events (
+    id bigserial PRIMARY KEY,
+    server_id text NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
+    victim text NOT NULL,
+    message text NOT NULL,
+    killer text,
+    created_at timestamptz NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS player_snapshots_uuid_idx ON player_snapshots (uuid);
 CREATE INDEX IF NOT EXISTS player_snapshots_server_online_idx ON player_snapshots (server_id, online);
+CREATE INDEX IF NOT EXISTS death_events_server_id_idx ON death_events (server_id, created_at DESC);

@@ -32,7 +32,24 @@ public final class PlayerLivesListener implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         LifeChange change = plugin.getLivesManager().recordDeath(player.getUniqueId());
-        plugin.getWebSnapshotService().publishPlayer(player, true);
+
+        String deathMessage = event.getDeathMessage();
+        if (deathMessage == null || deathMessage.isBlank()) {
+            var comp = event.deathMessage();
+            if (comp != null) {
+                deathMessage = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(comp);
+            }
+        }
+        if (deathMessage == null || deathMessage.isBlank()) {
+            deathMessage = player.getName() + " murió";
+        }
+
+        var causingEntity = event.getDamageSource().getCausingEntity();
+        String killerName = causingEntity instanceof org.bukkit.entity.Player killer ? killer.getName()
+                : (causingEntity != null ? causingEntity.getName() : null);
+
+        plugin.getWebSnapshotService().recordDeath(player.getName(), deathMessage, killerName, java.time.Instant.now());
+        plugin.getWebSnapshotService().publishAll(false);
         plugin.getDeathDuelDisplay().show(event);
         if (plugin.isDebugEnabled()) {
             plugin.getLogger().info("[debug] " + player.getName() + " murió: " + change.previous()

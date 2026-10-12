@@ -58,10 +58,36 @@
         </section>
       </div>
 
-      <section class="roster" aria-labelledby="arena-title">
-        <h2 id="arena-title" class="visually-hidden">Equipo</h2>
-        <div class="arena" id="arena"></div>
-      </section>
+      <div class="dashboard-layout">
+        <section class="roster" aria-labelledby="arena-title">
+          <h2 id="arena-title" class="visually-hidden">Equipo</h2>
+          <div class="arena" id="arena"></div>
+        </section>
+
+        <aside class="dashboard-sidebar" aria-label="Información complementaria y radar">
+          <section class="radar-card" aria-labelledby="radar-title">
+            <div class="card-header">
+              <span class="card-kicker">Localización</span>
+              <h2 id="radar-title" class="card-title">Radar de jugadores</h2>
+            </div>
+            <div class="radar-container" id="radar-container">
+              <canvas id="radar-canvas" width="280" height="280" aria-label="Radar táctico de posiciones"></canvas>
+              <div class="radar-tooltip" id="radar-tooltip" hidden></div>
+            </div>
+            <div class="radar-legend" id="radar-legend"></div>
+          </section>
+
+          <section class="deaths-console-card" aria-labelledby="deaths-console-title">
+            <div class="card-header">
+              <span class="card-kicker">Registro en vivo</span>
+              <h2 id="deaths-console-title" class="card-title">Consola de bajas</h2>
+            </div>
+            <div class="console-body" id="deaths-console" role="log" aria-live="polite">
+              <div class="console-empty">Sin muertes registradas</div>
+            </div>
+          </section>
+        </aside>
+      </div>
     </main>
 
     <footer>

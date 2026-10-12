@@ -34,6 +34,7 @@ public final class WebSnapshotService {
     private String token;
     private String serverId;
     private BukkitTask periodicTask;
+    private final List<DeathRecord> recentDeaths = new ArrayList<>();
 
     public WebSnapshotService(Main plugin) {
         this.plugin = plugin;
@@ -111,6 +112,7 @@ public final class WebSnapshotService {
 
     private PlayerState capturePlayer(Player player, boolean online, Instant capturedAt) {
         Location location = player.getLocation();
+        var inv = player.getInventory();
         return new PlayerState(player.getUniqueId(), player.getName(),
                 plugin.getLivesManager().getLives(player.getUniqueId(), false),
                 plugin.getLivesManager().getDeaths(player.getUniqueId()),
@@ -119,7 +121,20 @@ public final class WebSnapshotService {
                 location.getX(), location.getY(), location.getZ(), capturedAt,
                 Math.max(0, player.getLevel()), Math.max(0L, player.getTotalExperience()),
                 Math.max(0L, player.getStatistic(Statistic.WALK_ONE_CM)), blocksMined(player),
-                Math.max(0L, player.getStatistic(Statistic.MOB_KILLS)));
+                Math.max(0L, player.getStatistic(Statistic.MOB_KILLS)),
+                Math.max(0.0, player.getHealth()),
+                Math.max(1.0, player.getMaxHealth()),
+                Math.max(0, player.getFoodLevel()),
+                materialKey(inv.getHelmet()),
+                materialKey(inv.getChestplate()),
+                materialKey(inv.getLeggings()),
+                materialKey(inv.getBoots()),
+                materialKey(inv.getItemInOffHand()));
+    }
+
+    private static String materialKey(org.bukkit.inventory.ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) return null;
+        return item.getType().name();
     }
 
     private static long blocksMined(Player player) {
@@ -132,8 +147,22 @@ public final class WebSnapshotService {
         return total;
     }
 
+    public void recordDeath(String victim, String message, String killer, Instant timestamp) {
+        synchronized (recentDeaths) {
+            recentDeaths.add(new DeathRecord(victim, message, killer, timestamp));
+            while (recentDeaths.size() > 50) {
+                recentDeaths.remove(0);
+            }
+        }
+    }
+
     private String encode(List<PlayerState> players, boolean resetOnline, boolean shuttingDown, Instant capturedAt) {
-        StringBuilder json = new StringBuilder(512).append('{')
+        List<DeathRecord> deathsCopy;
+        synchronized (recentDeaths) {
+            deathsCopy = new ArrayList<>(recentDeaths);
+        }
+
+        StringBuilder json = new StringBuilder(1024).append('{')
                 .append("\"serverId\":").append(quote(serverId)).append(',')
                 .append("\"capturedAt\":").append(quote(capturedAt.toString())).append(',')
                 .append("\"resetOnline\":").append(resetOnline || shuttingDown).append(',')
@@ -148,7 +177,23 @@ public final class WebSnapshotService {
             if (index > 0) json.append(',');
             players.get(index).appendJson(json);
         }
+        json.append("],\"recentDeaths\":[");
+        for (int index = 0; index < deathsCopy.size(); index++) {
+            if (index > 0) json.append(',');
+            deathsCopy.get(index).appendJson(json);
+        }
         return json.append("]}").toString();
+    }
+
+    public record DeathRecord(String victim, String message, String killer, Instant timestamp) {
+        void appendJson(StringBuilder json) {
+            json.append('{')
+                    .append("\"victim\":").append(quote(victim)).append(',')
+                    .append("\"message\":").append(quote(message)).append(',')
+                    .append("\"killer\":").append(quote(killer)).append(',')
+                    .append("\"timestamp\":").append(quote(timestamp.toString()))
+                    .append('}');
+        }
     }
 
     private void send(String body, int attempt) {
@@ -195,10 +240,13 @@ public final class WebSnapshotService {
     private record PlayerState(UUID uuid, String name, int individualLives, int deaths, Long playTimeSeconds,
                                boolean online, String world, String dimension, Double x, Double y, Double z,
                                Instant lastSeenAt, Integer level, Long totalExperience, Long walkedCentimeters,
-                               Long blocksMined, Long mobKills) {
+                               Long blocksMined, Long mobKills,
+                               Double health, Double maxHealth, Integer foodLevel,
+                               String helmet, String chestplate, String leggings, String boots, String offhand) {
         static PlayerState offline(UUID uuid, String name, int lives, int deaths) {
             return new PlayerState(uuid, name, lives, deaths, null, false, null, null, null, null, null,
-                    null, null, null, null, null, null);
+                    null, null, null, null, null, null,
+                    null, null, null, null, null, null, null, null);
         }
 
         void appendJson(StringBuilder json) {
@@ -218,7 +266,17 @@ public final class WebSnapshotService {
                     .append(",\"totalExperience\":").append(totalExperience == null ? "null" : totalExperience)
                     .append(",\"walkedCentimeters\":").append(walkedCentimeters == null ? "null" : walkedCentimeters)
                     .append(",\"blocksMined\":").append(blocksMined == null ? "null" : blocksMined)
-                    .append(",\"mobKills\":").append(mobKills == null ? "null" : mobKills).append('}');
+                    .append(",\"mobKills\":").append(mobKills == null ? "null" : mobKills)
+                    .append(",\"health\":").append(health == null ? "null" : health)
+                    .append(",\"maxHealth\":").append(maxHealth == null ? "null" : maxHealth)
+                    .append(",\"foodLevel\":").append(foodLevel == null ? "null" : foodLevel)
+                    .append(",\"equipment\":{")
+                    .append("\"helmet\":").append(quote(helmet)).append(',')
+                    .append("\"chestplate\":").append(quote(chestplate)).append(',')
+                    .append("\"leggings\":").append(quote(leggings)).append(',')
+                    .append("\"boots\":").append(quote(boots)).append(',')
+                    .append("\"offhand\":").append(quote(offhand))
+                    .append("}}");
         }
     }
 }

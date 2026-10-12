@@ -5,6 +5,21 @@ import { z } from 'zod';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const nullableFinite = z.number().finite().nullable();
+const equipmentSchema = z.object({
+  helmet: z.string().max(80).nullable().optional(),
+  chestplate: z.string().max(80).nullable().optional(),
+  leggings: z.string().max(80).nullable().optional(),
+  boots: z.string().max(80).nullable().optional(),
+  offhand: z.string().max(80).nullable().optional()
+}).strict().optional();
+
+const deathRecordSchema = z.object({
+  victim: z.string().min(1).max(80),
+  message: z.string().min(1).max(255),
+  killer: z.string().max(80).nullable().optional(),
+  timestamp: z.iso.datetime({ offset: true })
+}).strict();
+
 const player = z.object({
   uuid: z.string().regex(UUID_PATTERN),
   name: z.string().min(1).max(32).nullable(),
@@ -22,7 +37,11 @@ const player = z.object({
   totalExperience: z.number().int().min(0).nullable(),
   walkedCentimeters: z.number().int().min(0).nullable(),
   blocksMined: z.number().int().min(0).nullable(),
-  mobKills: z.number().int().min(0).nullable()
+  mobKills: z.number().int().min(0).nullable(),
+  health: z.number().min(0).nullable().optional(),
+  maxHealth: z.number().min(0).nullable().optional(),
+  foodLevel: z.number().int().min(0).nullable().optional(),
+  equipment: equipmentSchema
 }).strict().refine(value => {
   const coordinates = [value.x, value.y, value.z];
   return coordinates.every(item => item === null) || coordinates.every(item => item !== null);
@@ -36,7 +55,8 @@ export const snapshotSchema = z.object({
   noLivesCommandExecutions: z.number().int().min(0),
   livesMode: z.enum(['individual', 'shared']),
   sharedLives: z.number().int().min(0).nullable(),
-  players: z.array(player).max(5000)
+  players: z.array(player).max(5000),
+  recentDeaths: z.array(deathRecordSchema).max(100).default([])
 }).strict().refine(value => value.livesMode !== 'shared' || value.sharedLives !== null, {
   message: 'sharedLives is required in shared mode', path: ['sharedLives']
 });

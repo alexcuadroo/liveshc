@@ -15,7 +15,7 @@ const config = {
   MAX_PLAYERS: 30
 };
 
-function poolWith({ serverRow, playerRows = [] }) {
+function poolWith({ serverRow, playerRows = [], deathRows = [] }) {
   const queries = [];
   return {
     queries,
@@ -23,6 +23,7 @@ function poolWith({ serverRow, playerRows = [] }) {
       queries.push({ sql, params });
       if (sql.includes('FROM servers WHERE')) return { rows: serverRow ? [serverRow] : [], rowCount: serverRow ? 1 : 0 };
       if (sql.includes('FROM player_snapshots')) return { rows: playerRows, rowCount: playerRows.length };
+      if (sql.includes('FROM death_events')) return { rows: deathRows, rowCount: deathRows.length };
       return { rows: [], rowCount: 0 };
     },
     connect: async () => ({
@@ -227,4 +228,52 @@ test('health reports unavailable when PostgreSQL fails', async () => {
   const pool = { query: async () => { throw new Error('offline'); } };
   const response = await request(createApp({ pool, config })).get('/health');
   assert.equal(response.status, 503);
+});
+
+test('versus endpoint includes player health, equipment, and recent deaths', async () => {
+  const pool = poolWith({
+    serverRow: serverRow(),
+    playerRows: [playerRow({
+      health: 18.5, max_health: 20.0, food_level: 19,
+      helmet: 'NETHERITE_HELMET', chestplate: 'DIAMOND_CHESTPLATE',
+      leggings: null, boots: 'IRON_BOOTS', offhand: 'TOTEM_OF_UNDYING'
+    })],
+    deathRows: [{
+      id: 1, victim: 'Bren21sm', message: 'Bren21sm fue víctima de Esqueleto', killer: 'Esqueleto',
+      created_at: new Date('2026-10-12T05:00:00Z')
+    }]
+  });
+  const response = await request(createApp({ pool, config })).get('/api/v1/versus');
+  assert.equal(response.status, 200);
+  assert.equal(response.body.players[0].health, 18.5);
+  assert.equal(response.body.players[0].foodLevel, 19);
+  assert.equal(response.body.players[0].equipment.helmet, 'NETHERITE_HELMET');
+  assert.equal(response.body.players[0].equipment.offhand, 'TOTEM_OF_UNDYING');
+  assert.equal(response.body.recentDeaths.length, 1);
+  assert.equal(response.body.recentDeaths[0].victim, 'Bren21sm');
+  assert.equal(response.body.recentDeaths[0].message, 'Bren21sm fue víctima de Esqueleto');
+});
+
+test('ingests snapshot with health, equipment and recent deaths', async () => {
+  const pool = poolForSave();
+  const snapshotWithAll = {
+    ...validSnapshot,
+    players: [{
+      ...validSnapshot.players[0],
+      health: 15.0, maxHealth: 20.0, foodLevel: 18,
+      equipment: { helmet: 'DIAMOND_HELMET', chestplate: 'IRON_CHESTPLATE', leggings: null, boots: null, offhand: 'SHIELD' }
+    }],
+    recentDeaths: [{
+      victim: 'Alex', message: 'Alex cayó desde un lugar alto', killer: null,
+      timestamp: '2026-08-20T12:00:00Z'
+    }]
+  };
+  const response = await request(createApp({ pool, config }))
+    .post('/internal/v1/snapshot')
+    .set('Authorization', `Bearer ${config.INGEST_TOKEN}`)
+    .send(snapshotWithAll);
+  assert.equal(response.status, 204);
+  const deathInsert = pool.queries.find(item => item.sql.includes('INSERT INTO death_events'));
+  assert.ok(deathInsert);
+  assert.equal(deathInsert.params[1], 'Alex');
 });
