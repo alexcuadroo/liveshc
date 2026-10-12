@@ -13,7 +13,7 @@ export const DEFAULTS = Object.freeze({
   players: [],
   layout: 'row',
   size: 'm',
-  offline: 'show',
+  offline: 'dim',
   head: 'flat',
   names: true,
   bg: 'none',

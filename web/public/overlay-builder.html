@@ -3,78 +3,195 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#120d0c" />
     <meta name="robots" content="noindex" />
     <title>LivesHC · Editor de overlay para OBS</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/overlay-builder.css?v=1" />
-    <script type="module" src="/overlay-builder.js?v=1"></script>
+    <link rel="stylesheet" href="/overlay-builder.css?v=3" />
+    <script type="module" src="/overlay-builder.js?v=3"></script>
   </head>
   <body>
     <header>
-      <h1>Editor de overlay para OBS</h1>
-      <p>Marca o desmarca opciones: la URL se actualiza al instante. Pégala en OBS como <em>Fuente de navegador</em>.</p>
+      <div class="header-inner">
+        <div class="title-wrap">
+          <span class="eyebrow"
+            ><span class="eyebrow-dot"></span> Transmisión en directo</span
+          >
+          <h1>Editor de overlay <em>OBS</em></h1>
+          <p class="subtitle">
+            Personaliza widgets en tiempo real y pégalos como
+            <em>Fuente de navegador</em>.
+          </p>
+        </div>
+        <a href="/" class="close-btn" title="Volver al panel principal">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Cerrar</span>
+        </a>
+      </div>
     </header>
 
     <main class="layout">
       <form id="form" class="panel" autocomplete="off">
         <fieldset>
-          <legend>Datos</legend>
+          <legend>Datos visibles</legend>
           <ul id="stats" class="stat-list"></ul>
-          <small>Usa ↑ ↓ para cambiar el orden. El intento (y las vidas, si son compartidas) se muestra una sola vez.</small>
+          <span class="hint">Usa ↑ ↓ para reordenar.</span>
         </fieldset>
 
         <fieldset>
           <legend>Jugadores</legend>
-          <div id="players" class="chips"><span class="muted">Cargando…</span></div>
-          <small>Sin selección = todos.</small>
+          <div id="players" class="chips">
+            <span class="hint">Cargando jugadores…</span>
+          </div>
+          <span class="hint"
+            >Sin selección = muestra a todos los jugadores activos.</span
+          >
         </fieldset>
 
         <fieldset>
-          <legend>Apariencia</legend>
-          <label>Cabeza
-            <select name="head"><option value="flat">Plana</option><option value="3d">3D</option></select>
-          </label>
-          <label>Disposición
-            <select name="layout"><option value="row">Fila</option><option value="column">Columna</option><option value="grid">Rejilla</option></select>
-          </label>
-          <label>Tamaño
-            <select name="size"><option value="s">Pequeño</option><option value="m">Mediano</option><option value="l">Grande</option></select>
-          </label>
-          <label>Desconectados
-            <select name="offline"><option value="dim">Atenuados</option><option value="show">Normales</option><option value="hide">Ocultos</option></select>
-          </label>
-          <label>Fondo
-            <select name="bg"><option value="none">Transparente</option><option value="dark">Tarjeta oscura</option></select>
-          </label>
-          <label class="check"><input type="checkbox" name="names" checked /> Mostrar nombres</label>
-          <label>Actualizar cada (s)
-            <input type="number" name="refresh" min="3" max="60" value="5" />
-          </label>
+          <legend>Apariencia y diseño</legend>
+          <div class="control-grid">
+            <div class="field">
+              <span class="field-label">Cabeza</span>
+              <div class="select-wrapper">
+                <select name="head">
+                  <option value="flat">Plana (2D)</option>
+                  <option value="3d">Mascara 3D</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Disposición</span>
+              <div class="select-wrapper">
+                <select name="layout">
+                  <option value="row">Fila horizontal</option>
+                  <option value="column">Columna vertical</option>
+                  <option value="grid">Rejilla cuadrícula</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Tamaño</span>
+              <div class="select-wrapper">
+                <select name="size">
+                  <option value="s">Pequeño (S)</option>
+                  <option value="m">Mediano (M)</option>
+                  <option value="l">Grande (L)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Desconectados</span>
+              <div class="select-wrapper">
+                <select name="offline">
+                  <option value="dim">Atenuados</option>
+                  <option value="show">Normales</option>
+                  <option value="hide">Ocultos</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Fondo de tarjeta</span>
+              <div class="select-wrapper">
+                <select name="bg">
+                  <option value="none">Transparente</option>
+                  <option value="dark">Tarjeta oscura</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Refresco (segundos)</span>
+              <input type="number" name="refresh" min="3" max="60" value="5" />
+            </div>
+
+            <div class="field full-width">
+              <label class="check">
+                <input type="checkbox" name="names" checked />
+                <span>Mostrar nombres de jugador</span>
+              </label>
+            </div>
+          </div>
         </fieldset>
       </form>
 
       <section class="panel output">
-        <label for="url">URL para OBS</label>
-        <div class="url-row">
-          <input id="url" type="text" readonly />
-          <button id="copy" type="button">Copiar</button>
+        <div class="url-section">
+          <div class="section-label">
+            <span>URL para fuente de navegador</span>
+          </div>
+          <div class="url-row">
+            <input id="url" type="text" readonly spellcheck="false" />
+            <button id="copy" type="button" class="btn-primary">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path
+                  d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                ></path>
+              </svg>
+              <span>Copiar</span>
+            </button>
+          </div>
         </div>
-        <div class="preview-bar">
-          <span>Vista previa</span>
-          <select id="preview-bg" aria-label="Fondo de vista previa">
-            <option value="checker">Ajedrezado</option>
-            <option value="game">Cielo</option>
-            <option value="dark">Oscuro</option>
-          </select>
+
+        <div class="preview-header">
+          <div class="preview-title">
+            <span>Vista previa</span>
+            <span class="live-badge">En vivo</span>
+          </div>
+          <div class="preview-controls">
+            <div class="select-wrapper">
+              <select id="preview-bg" aria-label="Fondo de la vista previa">
+                <option value="checker">Fondo ajedrezado</option>
+                <option value="game">Fondo de juego</option>
+                <option value="dark">Fondo oscuro puro</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div id="preview" class="preview checker"><iframe id="frame" title="Vista previa del overlay"></iframe></div>
+
+        <div id="preview" class="preview checker">
+          <iframe id="frame" title="Vista previa del overlay"></iframe>
+        </div>
+
         <details open>
-          <summary>Cómo añadirlo en OBS</summary>
+          <summary>Cómo añadirlo en OBS Studio</summary>
           <ol>
-            <li>En <b>Fuentes</b> pulsa <b>+</b> → <b>Navegador</b>.</li>
-            <li>Pega la URL en el campo <b>URL</b>.</li>
-            <li>Tamaño sugerido: <b id="size-hint">800 × 120</b>. Deja el CSS personalizado por defecto (fondo transparente).</li>
-            <li>Opcional: marca <b>Actualizar navegador cuando la escena se active</b>.</li>
+            <li>
+              En OBS, dentro de tu lista de <b>Fuentes</b>, haz clic en
+              <b>+</b> → <b>Navegador</b>.
+            </li>
+            <li>Pega la URL generada en el campo <b>URL</b>.</li>
+            <li>
+              Configura la resolución recomendada:
+              <b id="size-hint">1000 × 140</b>. Mantén el CSS personalizado por
+              defecto.
+            </li>
+            <li>
+              Recomendado: activa la opción
+              <em>«Actualizar navegador cuando la escena se active»</em> para
+              sincronización limpia.
+            </li>
           </ol>
         </details>
       </section>

@@ -4,11 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "migrate": "node src/migrate.js",
     "test": "node --test"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "express": "^5.1.0",
     "pg": "^8.16.3",
