@@ -276,6 +276,8 @@ test('ingests snapshot with health, equipment and recent deaths', async () => {
   const deathInsert = pool.queries.find(item => item.sql.includes('INSERT INTO death_events'));
   assert.ok(deathInsert);
   assert.equal(deathInsert.params[1], 'Alex');
+  // Los snapshots reenvían las muertes recientes; el conflicto evita reinsertarlas.
+  assert.match(deathInsert.sql, /ON CONFLICT ON CONSTRAINT death_events_unique_event DO NOTHING/);
 });
 
 test('serves overlay and builder pages with no-cache', async () => {

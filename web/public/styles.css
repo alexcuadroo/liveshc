@@ -402,6 +402,7 @@ main .arena.grid-mode .fighter-inner > * { direction: ltr; }
 .console-victim { color: var(--ink); font-weight: 600; }
 .console-msg { color: var(--ink); word-break: break-word; line-height: 1.35; }
 .console-msg em { color: var(--blood); font-style: normal; font-weight: 600; }
+.mc-obfuscated { filter: blur(.04em); opacity: .85; }
 .console-empty { color: var(--muted); text-align: center; padding: 1.5rem 0; font-size: .7rem; }
 
 .privacy-note { margin: 1.5rem auto 0; max-width: 50rem; color: var(--muted); text-align: center; font-size: .7rem; line-height: 1.6; }

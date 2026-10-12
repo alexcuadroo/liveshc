@@ -14,6 +14,97 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 }
 
+// Paleta oficial de códigos de formato de Minecraft (`Formatting codes`).
+const MINECRAFT_COLORS = {
+  0: '#000000', 1: '#0000AA', 2: '#00AA00', 3: '#00AAAA',
+  4: '#AA0000', 5: '#AA00AA', 6: '#FFAA00', 7: '#AAAAAA',
+  8: '#555555', 9: '#5555FF', a: '#55FF55', b: '#55FFFF',
+  c: '#FF5555', d: '#FF55FF', e: '#FFFF55', f: '#FFFFFF',
+  g: '#DDD605'
+};
+
+// Convierte texto con códigos de Minecraft (§) a HTML seguro: colores clásicos
+// (§a, §c…), estilos (§l, §o, §n, §m, §r) y color hexadecimal de Bedrock
+// (§x§5§2§8§c§f§f). El texto plano se escapa antes de insertarlo.
+function renderMinecraftText(text) {
+  const source = String(text ?? '');
+  let color = null;
+  let bold = false;
+  let italic = false;
+  let underline = false;
+  let strike = false;
+  let obfuscated = false;
+  let output = '';
+  let buffer = '';
+
+  const flush = () => {
+    if (buffer === '') return;
+    const content = escapeHtml(buffer);
+    buffer = '';
+    if (obfuscated) {
+      output += `<span class="mc-obfuscated">${content}</span>`;
+      return;
+    }
+    const styles = color ? [`color:${color}`] : [];
+    if (bold) styles.push('font-weight:700');
+    if (italic) styles.push('font-style:italic');
+    if (underline) styles.push('text-decoration:underline');
+    if (strike) styles.push('text-decoration:line-through');
+    output += styles.length ? `<span style="${styles.join(';')}">${content}</span>` : content;
+  };
+
+  for (let index = 0; index < source.length; index++) {
+    const char = source[index];
+    if (char !== '§' && char !== '&') { buffer += char; continue; }
+    const code = source[index + 1]?.toLowerCase();
+    if (code === 'x') {
+      let hex = '';
+      let cursor = index + 2;
+      while (hex.length < 6 && source[cursor] === '§') {
+        const digit = source[cursor + 1];
+        if (!digit || !/[0-9a-fA-F]/.test(digit)) break;
+        hex += digit;
+        cursor += 2;
+      }
+      if (hex.length === 6) {
+        flush();
+        bold = italic = underline = strike = obfuscated = false;
+        color = `#${hex}`;
+        index = cursor - 1;
+        continue;
+      }
+    }
+    if (code && MINECRAFT_COLORS[code]) {
+      flush();
+      bold = italic = underline = strike = obfuscated = false;
+      color = MINECRAFT_COLORS[code];
+      index++;
+      continue;
+    }
+    if (code === 'l' || code === 'o' || code === 'n' || code === 'm' || code === 'k') {
+      flush();
+      if (code === 'l') bold = true;
+      else if (code === 'o') italic = true;
+      else if (code === 'n') underline = true;
+      else if (code === 'm') strike = true;
+      else obfuscated = true;
+      index++;
+      continue;
+    }
+    if (code === 'r') {
+      flush();
+      color = null;
+      bold = italic = underline = strike = obfuscated = false;
+      index++;
+      continue;
+    }
+    // Código desconocido o '&' que no forma código: se descarta el prefijo.
+  }
+
+  flush();
+  return output;
+}
+
 function formatDuration(seconds) {
   if (seconds === null) return 'Sin registrar';
   const hours = Math.floor(seconds / 3600);
@@ -362,7 +453,7 @@ function renderRecentDeaths(recentDeaths = []) {
           <span class="console-victim">${escapeHtml(death.victim)}</span>
           <time class="console-time">${escapeHtml(time)}</time>
         </div>
-        <div class="console-msg">${escapeHtml(death.message)}</div>
+        <div class="console-msg">${renderMinecraftText(death.message)}</div>
       </div>`;
   }).join('');
 

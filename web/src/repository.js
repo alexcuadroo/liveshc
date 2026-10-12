@@ -61,10 +61,13 @@ export async function saveSnapshot(pool, snapshot) {
     }
 
     if (Array.isArray(snapshot.recentDeaths) && snapshot.recentDeaths.length > 0) {
+      // El plugin reenvía las muertes recientes en cada snapshot: el conflicto sobre
+      // (servidor, víctima, fecha) evita duplicarlas en cada envío.
       for (const death of snapshot.recentDeaths) {
         await client.query(`
           INSERT INTO death_events (server_id, victim, message, killer, created_at)
           VALUES ($1, $2, $3, $4, $5::timestamptz)
+          ON CONFLICT ON CONSTRAINT death_events_unique_event DO NOTHING
         `, [snapshot.serverId, death.victim, death.message, death.killer ?? null, death.timestamp]);
       }
       // Retener como máximo 100 eventos por servidor
