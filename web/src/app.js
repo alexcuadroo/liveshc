@@ -20,7 +20,7 @@ export function createApp({ pool, config }) {
   app.disable('x-powered-by');
   app.use((_request, response, next) => {
     response.set({
-      'Content-Security-Policy': `default-src 'self'; img-src 'self' data: ${skinOrigin}; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'`,
+      'Content-Security-Policy': `default-src 'self'; img-src 'self' data: ${skinOrigin}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' https://static.cloudflareinsights.com 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'`,
       'Referrer-Policy': 'no-referrer',
       'X-Content-Type-Options': 'nosniff'
     });

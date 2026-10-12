@@ -418,6 +418,8 @@ function setupRadar() {
     } else {
       tooltip.hidden = true;
     }
+  });
+
   canvas.addEventListener('mouseleave', () => {
     state.radarHovered = null;
     tooltip.hidden = true;
