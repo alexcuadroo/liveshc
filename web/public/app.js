@@ -260,6 +260,55 @@ function renderAttemptRecord(server) {
     : '—';
 }
 
+async function copyText(value) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return true;
+  }
+  const area = document.createElement('textarea');
+  area.value = value;
+  area.setAttribute('readonly', '');
+  area.style.position = 'fixed';
+  area.style.opacity = '0';
+  document.body.append(area);
+  area.select();
+  const copied = document.execCommand('copy');
+  area.remove();
+  return copied;
+}
+
+function renderServerAddress(address) {
+  const value = (address ?? '').trim();
+  if (!value) return;
+
+  const block = document.querySelector('#server-address');
+  const hint = document.querySelector('#server-address-hint');
+  const valueLabel = document.querySelector('#server-address-value');
+  valueLabel.textContent = value;
+  block.setAttribute('aria-label', `Copiar dirección del servidor ${value}`);
+  block.hidden = false;
+
+  let timer = null;
+  block.addEventListener('click', async () => {
+    let message = 'Copiado';
+    try {
+      if (!await copyText(value)) message = 'Copia manual';
+    } catch {
+      message = 'Copia manual';
+    }
+    hint.textContent = message;
+    block.classList.toggle('is-copied', message === 'Copiado');
+    document.querySelector('#announcer').textContent = message === 'Copiado'
+      ? 'Dirección del servidor copiada'
+      : `No se pudo copiar. La dirección es ${value}`;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      hint.textContent = 'Copiar';
+      block.classList.remove('is-copied');
+    }, 2000);
+  });
+}
+
 async function refresh() {
   try {
     const response = await fetch('/api/v1/versus', { headers: { Accept: 'application/json' } });
@@ -301,6 +350,7 @@ document.querySelector('#arena').replaceChildren(
 
 fetch('/api/v1/config').then(response => response.ok ? response.json() : null).then(config => {
   if (config?.skinUrlTemplate?.includes('{uuid}')) state.skinTemplate = config.skinUrlTemplate;
+  renderServerAddress(config?.serverAddress);
 }).finally(refresh);
 document.addEventListener('visibilitychange', () => { schedule(); if (!document.hidden) refresh(); });
 schedule();

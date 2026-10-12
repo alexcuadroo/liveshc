@@ -13,7 +13,7 @@ No hay que configurar UUID en la web: el plugin ya envía todos los jugadores en
 
 1. Crear un servicio PostgreSQL privado y una base/usuario para LivesHC.
 2. Crear una aplicación desde el directorio `web` usando su `Dockerfile`.
-3. Copiar las variables de `.env.example`, usando un secreto de al menos 24 caracteres. No hay UUID que configurar: los protagonistas se detectan solos desde los snapshots.
+3. Copiar las variables de `.env.example`, usando un secreto de al menos 24 caracteres. No hay UUID que configurar: los protagonistas se detectan solos desde los snapshots. `SERVER_ADDRESS` define la dirección que aparece en el pie del panel con botón de copiar; por defecto `alexndh.holy.gg`. Si se deja vacía, el bloque no se muestra.
 4. Exponer solamente el puerto HTTP `3000`. No publicar el puerto de PostgreSQL.
 5. Configurar el health check en `/health`.
 6. Copiar en `plugins/LivesHC/config.yml` la URL HTTPS `/internal/v1/snapshot`, el mismo token y `server-id`, elegir `modo: solo|coop`, activar `web.habilitada` y reiniciar el servidor.

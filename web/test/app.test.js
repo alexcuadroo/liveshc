@@ -9,6 +9,7 @@ const PLAYER_2 = '00000000-0000-4000-8000-000000000002';
 const config = {
   INGEST_TOKEN: 'this-is-a-long-test-token-1234',
   SERVER_ID: 'principal',
+  SERVER_ADDRESS: 'test.example.com',
   SKIN_URL_TEMPLATE: 'https://example.com/{uuid}.png',
   TRUST_PROXY: 1,
   MAX_PLAYERS: 30
@@ -168,6 +169,14 @@ test('returns empty players before the first snapshot', async () => {
   assert.equal(response.status, 200);
   assert.equal(response.body.server, null);
   assert.deepEqual(response.body.players, []);
+});
+
+test('exposes the front-end configuration including the server address', async () => {
+  const pool = poolWith({ serverRow: null });
+  const response = await request(createApp({ pool, config })).get('/api/v1/config');
+  assert.equal(response.status, 200);
+  assert.equal(response.body.skinUrlTemplate, config.SKIN_URL_TEMPLATE);
+  assert.equal(response.body.serverAddress, config.SERVER_ADDRESS);
 });
 
 test('serves front-end assets with revalidation headers', async () => {

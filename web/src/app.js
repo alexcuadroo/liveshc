@@ -67,7 +67,10 @@ export function createApp({ pool, config }) {
 
   app.get('/api/v1/config', (_request, response) => {
     response.set('Cache-Control', 'public, max-age=3600');
-    response.json({ skinUrlTemplate: config.SKIN_URL_TEMPLATE });
+    response.json({
+      skinUrlTemplate: config.SKIN_URL_TEMPLATE,
+      serverAddress: config.SERVER_ADDRESS
+    });
   });
 
   app.use(express.static(publicDir, {
