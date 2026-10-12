@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>LivesHC · Editor de overlay para OBS</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/overlay-builder.css?v=1" />
+    <script type="module" src="/overlay-builder.js?v=1"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Editor de overlay para OBS</h1>
+      <p>Marca o desmarca opciones: la URL se actualiza al instante. Pégala en OBS como <em>Fuente de navegador</em>.</p>
+    </header>
+
+    <main class="layout">
+      <form id="form" class="panel" autocomplete="off">
+        <fieldset>
+          <legend>Datos</legend>
+          <ul id="stats" class="stat-list"></ul>
+          <small>Usa ↑ ↓ para cambiar el orden. El intento (y las vidas, si son compartidas) se muestra una sola vez.</small>
+        </fieldset>
+
+        <fieldset>
+          <legend>Jugadores</legend>
+          <div id="players" class="chips"><span class="muted">Cargando…</span></div>
+          <small>Sin selección = todos.</small>
+        </fieldset>
+
+        <fieldset>
+          <legend>Apariencia</legend>
+          <label>Cabeza
+            <select name="head"><option value="flat">Plana</option><option value="3d">3D</option></select>
+          </label>
+          <label>Disposición
+            <select name="layout"><option value="row">Fila</option><option value="column">Columna</option><option value="grid">Rejilla</option></select>
+          </label>
+          <label>Tamaño
+            <select name="size"><option value="s">Pequeño</option><option value="m">Mediano</option><option value="l">Grande</option></select>
+          </label>
+          <label>Desconectados
+            <select name="offline"><option value="dim">Atenuados</option><option value="show">Normales</option><option value="hide">Ocultos</option></select>
+          </label>
+          <label>Fondo
+            <select name="bg"><option value="none">Transparente</option><option value="dark">Tarjeta oscura</option></select>
+          </label>
+          <label class="check"><input type="checkbox" name="names" checked /> Mostrar nombres</label>
+          <label>Actualizar cada (s)
+            <input type="number" name="refresh" min="3" max="60" value="5" />
+          </label>
+        </fieldset>
+      </form>
+
+      <section class="panel output">
+        <label for="url">URL para OBS</label>
+        <div class="url-row">
+          <input id="url" type="text" readonly />
+          <button id="copy" type="button">Copiar</button>
+        </div>
+        <div class="preview-bar">
+          <span>Vista previa</span>
+          <select id="preview-bg" aria-label="Fondo de vista previa">
+            <option value="checker">Ajedrezado</option>
+            <option value="game">Cielo</option>
+            <option value="dark">Oscuro</option>
+          </select>
+        </div>
+        <div id="preview" class="preview checker"><iframe id="frame" title="Vista previa del overlay"></iframe></div>
+        <details open>
+          <summary>Cómo añadirlo en OBS</summary>
+          <ol>
+            <li>En <b>Fuentes</b> pulsa <b>+</b> → <b>Navegador</b>.</li>
+            <li>Pega la URL en el campo <b>URL</b>.</li>
+            <li>Tamaño sugerido: <b id="size-hint">800 × 120</b>. Deja el CSS personalizado por defecto (fondo transparente).</li>
+            <li>Opcional: marca <b>Actualizar navegador cuando la escena se active</b>.</li>
+          </ol>
+        </details>
+      </section>
+    </main>
+  </body>
+</html>

@@ -407,9 +407,10 @@ main .arena.grid-mode .fighter-inner > * { direction: ltr; }
 .privacy-note { margin: 1.5rem auto 0; max-width: 50rem; color: var(--muted); text-align: center; font-size: .7rem; line-height: 1.6; }
 footer { margin-top: 3rem; border-top: 1px solid var(--line); border-bottom: 0; color: var(--muted); }
 .footer-branding { display: flex; flex-wrap: wrap; align-items: safe center; gap: 1rem; }
-.github-link { display: inline-flex; align-items: center; gap: .5rem; color: var(--ink); text-decoration: none; }
-.github-link:hover { color: var(--blood); }
-.github-link svg { display: block; flex: none; width: 1.15rem; height: 1.15rem; fill: currentColor; }
+.github-link { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; color: var(--muted); text-decoration: none; transition: color .15s ease, transform .15s ease; }
+.github-link:hover { color: var(--blood); transform: translateY(-1px); }
+.github-link.icon-btn { padding: .2rem; border-radius: 4px; }
+.github-link svg { display: block; flex: none; width: 1.25rem; height: 1.25rem; fill: currentColor; }
 .server-address {
   display: inline-flex;
   align-items: center;

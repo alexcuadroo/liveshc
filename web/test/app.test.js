@@ -277,3 +277,32 @@ test('ingests snapshot with health, equipment and recent deaths', async () => {
   assert.ok(deathInsert);
   assert.equal(deathInsert.params[1], 'Alex');
 });
+
+test('serves overlay and builder pages with no-cache', async () => {
+  const pool = poolWith({ serverRow: null });
+  const app = createApp({ pool, config });
+
+  const overlayRes = await request(app).get('/overlay');
+  assert.equal(overlayRes.status, 200);
+  assert.equal(overlayRes.headers['cache-control'], 'no-cache');
+  assert.match(overlayRes.headers['content-security-policy'], /frame-ancestors 'self'/);
+
+  const builderRes = await request(app).get('/overlay/builder');
+  assert.equal(builderRes.status, 200);
+  assert.equal(builderRes.headers['cache-control'], 'no-cache');
+  assert.match(builderRes.headers['content-security-policy'], /frame-ancestors 'none'/);
+});
+
+test('config endpoint exposes head templates', async () => {
+  const pool = poolWith({ serverRow: null });
+  const customConfig = {
+    ...config,
+    HEAD_URL_TEMPLATE: 'https://custom-heads.example.com/flat/{uuid}',
+    HEAD_3D_URL_TEMPLATE: 'https://custom-heads.example.com/3d/{uuid}'
+  };
+  const response = await request(createApp({ pool, config: customConfig })).get('/api/v1/config');
+  assert.equal(response.status, 200);
+  assert.equal(response.body.headUrlTemplate, customConfig.HEAD_URL_TEMPLATE);
+  assert.equal(response.body.head3dUrlTemplate, customConfig.HEAD_3D_URL_TEMPLATE);
+});
+

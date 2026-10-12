@@ -1,0 +1,91 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.overlay {
+  --head: 56px;
+  --font: 20px;
+  --gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+  padding: 8px;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: var(--font);
+  color: #ffffff;
+  text-shadow: 
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000,
+     0 2px 4px rgba(0, 0, 0, 0.95);
+}
+
+.size-s { --head: 40px; --font: 15px; --gap: 8px; }
+.size-l { --head: 80px; --font: 28px; --gap: 16px; }
+
+.layout-row { flex-direction: row; }
+.layout-column { flex-direction: column; align-items: flex-start; }
+.layout-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--head) * 3.4), 1fr));
+}
+
+.globals {
+  display: flex;
+  gap: var(--gap);
+  grid-column: 1 / -1;
+}
+
+.card, .globals .stat {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gap) * 0.75);
+  border-radius: 10px;
+  opacity: 1;
+  transition: opacity 0.4s, filter 0.4s;
+}
+
+.bg-dark .card, .bg-dark .globals .stat {
+  background: rgba(10, 10, 14, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 12px 6px 6px;
+}
+.bg-dark .globals .stat { padding: 6px 12px; }
+
+.head {
+  width: var(--head);
+  height: var(--head);
+  image-rendering: pixelated;
+  opacity: 1;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.8));
+  flex-shrink: 0;
+}
+
+.info { display: flex; flex-direction: column; gap: 2px; }
+.name { font-size: 0.8em; line-height: 1.1; opacity: 1; }
+.stats { display: flex; gap: calc(var(--gap) * 0.9); }
+
+.stat { display: inline-flex; align-items: center; gap: 4px; line-height: 1; opacity: 1; }
+.icon {
+  width: 1em;
+  height: 1em;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 2px 0 #000);
+}
+
+.offline { opacity: 0.7; }
+.dead .head { filter: grayscale(1) brightness(0.6); }
+.dead .stat-lives b { color: #ff6b6b; }
+
+.bump b { animation: bump 0.9s ease-out; }
+@keyframes bump {
+  0% { transform: scale(1.7); color: #ff4d4d; }
+  100% { transform: scale(1); }
+}
+.stat b { display: inline-block; }

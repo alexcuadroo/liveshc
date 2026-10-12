@@ -15,12 +15,17 @@ function tokenMatches(expected, supplied = '') {
 
 export function createApp({ pool, config }) {
   const app = express();
-  const skinOrigin = new URL(config.SKIN_URL_TEMPLATE).origin;
+  const headTemplate = config.HEAD_URL_TEMPLATE ?? 'https://mc-heads.net/avatar/{uuid}/128';
+  const head3dTemplate = config.HEAD_3D_URL_TEMPLATE ?? 'https://mc-heads.net/head/{uuid}/128';
+  const imageOrigins = [...new Set([config.SKIN_URL_TEMPLATE, headTemplate, head3dTemplate]
+    .map(template => new URL(template).origin))].join(' ');
   app.set('trust proxy', config.TRUST_PROXY);
   app.disable('x-powered-by');
-  app.use((_request, response, next) => {
+  app.use((request, response, next) => {
+    // El overlay se previsualiza dentro de un iframe del editor (mismo origen).
+    const frameAncestors = request.path === '/overlay' ? "'self'" : "'none'";
     response.set({
-      'Content-Security-Policy': `default-src 'self'; img-src 'self' data: ${skinOrigin}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' https://static.cloudflareinsights.com 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'`,
+      'Content-Security-Policy': `default-src 'self'; img-src 'self' data: ${imageOrigins}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' https://static.cloudflareinsights.com 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; frame-src 'self'; frame-ancestors ${frameAncestors}; base-uri 'self'`,
       'Referrer-Policy': 'no-referrer',
       'X-Content-Type-Options': 'nosniff'
     });
@@ -69,9 +74,18 @@ export function createApp({ pool, config }) {
     response.set('Cache-Control', 'public, max-age=3600');
     response.json({
       skinUrlTemplate: config.SKIN_URL_TEMPLATE,
+      headUrlTemplate: headTemplate,
+      head3dUrlTemplate: head3dTemplate,
       serverAddress: config.SERVER_ADDRESS
     });
   });
+
+  const sendPage = file => (_request, response) => {
+    response.setHeader('Cache-Control', 'no-cache');
+    response.sendFile(path.join(publicDir, file));
+  };
+  app.get('/overlay', sendPage('overlay.html'));
+  app.get(['/overlay/builder', '/overlay/editor'], sendPage('overlay-builder.html'));
 
   app.use(express.static(publicDir, {
     etag: true,

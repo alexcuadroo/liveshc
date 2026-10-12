@@ -2,6 +2,14 @@ import pg from 'pg';
 import { createApp } from './app.js';
 import { loadConfig } from './config.js';
 
+if (typeof process.loadEnvFile === 'function') {
+  try {
+    process.loadEnvFile();
+  } catch (err) {
+    if (err.code !== 'ENOENT') console.warn('Aviso cargando .env:', err.message);
+  }
+}
+
 const config = loadConfig();
 const pool = new pg.Pool({ connectionString: config.DATABASE_URL, max: 10 });
 const server = createApp({ pool, config }).listen(config.PORT, () => {
