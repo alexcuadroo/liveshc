@@ -4,7 +4,9 @@ const state = {
   skinTemplate: 'https://mc-heads.net/body/{uuid}/180',
   hasData: false,
   radarPlayers: [],
-  radarHovered: null
+  radarHovered: null,
+  radarAngle: 0,
+  radarAnimId: null
 };
 const fallbackSkin = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 360"><path fill="#241b18" d="M0 0h180v360H0z"/><path fill="#66564f" d="M52 25h76v76H52z"/><path fill="#4b3d38" d="M40 108h100v126H40z"/><path fill="#66564f" d="M18 112h24v146H18zm120 0h24v146h-24zM45 234h38v116H45zm52 0h38v116H97z"/></svg>')}`;
 
@@ -416,14 +418,37 @@ function setupRadar() {
     } else {
       tooltip.hidden = true;
     }
-    drawRadar();
-  });
-
   canvas.addEventListener('mouseleave', () => {
     state.radarHovered = null;
     tooltip.hidden = true;
-    drawRadar();
   });
+
+  startRadarAnimation();
+}
+
+function startRadarAnimation() {
+  if (state.radarAnimId) return;
+  let lastTime = performance.now();
+
+  function animate(now) {
+    const delta = (now - lastTime) / 1000;
+    lastTime = now;
+
+    // Rotate ~60 degrees per second (full rotation in ~6s)
+    state.radarAngle = (state.radarAngle + delta * 1.05) % (Math.PI * 2);
+
+    drawRadar();
+    state.radarAnimId = requestAnimationFrame(animate);
+  }
+
+  state.radarAnimId = requestAnimationFrame(animate);
+}
+
+function stopRadarAnimation() {
+  if (state.radarAnimId) {
+    cancelAnimationFrame(state.radarAnimId);
+    state.radarAnimId = null;
+  }
 }
 
 function renderRadar(players) {
@@ -494,14 +519,37 @@ function drawRadar() {
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Radar sweep line decorative effect
+  // Animated radar sweep cone / wedge
+  const sweepAngle = state.radarAngle || 0;
+  const wedgeSpan = Math.PI / 3; // 60-degree beam wedge like real sonar
+
+  ctx.save();
   ctx.beginPath();
   ctx.moveTo(centerX, centerY);
-  ctx.arc(centerX, centerY, radius, -Math.PI / 4, 0);
+  ctx.arc(centerX, centerY, radius, sweepAngle - wedgeSpan, sweepAngle);
   ctx.closePath();
-  ctx.fillStyle = 'rgba(216, 58, 46, 0.05)';
+
+  // Create conic or multi-step radial sweep gradient
+  try {
+    const sweepGrad = ctx.createConicGradient(sweepAngle, centerX, centerY);
+    sweepGrad.addColorStop(0, 'rgba(216, 58, 46, 0.32)'); // leading edge glow
+    sweepGrad.addColorStop(1 - (wedgeSpan / (Math.PI * 2)), 'rgba(216, 58, 46, 0.0)'); // fade out behind
+    sweepGrad.addColorStop(1, 'rgba(216, 58, 46, 0.32)');
+    ctx.fillStyle = sweepGrad;
+  } catch {
+    ctx.fillStyle = 'rgba(216, 58, 46, 0.18)';
+  }
   ctx.fill();
 
+  // Leading sweep line
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(centerX + Math.cos(sweepAngle) * radius, centerY + Math.sin(sweepAngle) * radius);
+  ctx.strokeStyle = 'rgba(255, 110, 95, 0.75)';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  ctx.restore();
   ctx.restore();
 
   const players = state.radarPlayers;
@@ -692,5 +740,13 @@ fetch('/api/v1/config').then(response => response.ok ? response.json() : null).t
   if (config?.skinUrlTemplate?.includes('{uuid}')) state.skinTemplate = config.skinUrlTemplate;
   renderServerAddress(config?.serverAddress);
 }).finally(refresh);
-document.addEventListener('visibilitychange', () => { schedule(); if (!document.hidden) refresh(); });
+document.addEventListener('visibilitychange', () => {
+  schedule();
+  if (document.hidden) {
+    stopRadarAnimation();
+  } else {
+    startRadarAnimation();
+    refresh();
+  }
+});
 schedule();
