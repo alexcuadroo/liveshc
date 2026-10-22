@@ -1,4 +1,6 @@
-FROM node:22-alpine
+# Node.js 22.23.4: security release 2026-10-21 (CVE-2026-111497, HIGH).
+ARG NODE_VERSION=22.23.4
+FROM node:${NODE_VERSION}-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
